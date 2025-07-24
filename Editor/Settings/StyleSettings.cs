@@ -1,0 +1,77 @@
+using System;
+using UnityEditor;
+using UnityEngine;
+
+#nullable enable
+namespace UnityStyleGenerator.Editor.Settings
+{
+    [FilePath("ProjectSettings/StyleSettings.asset", FilePathAttribute.Location.ProjectFolder)]
+    public class StyleSettings : ScriptableSingleton<StyleSettings>
+    {
+        [SerializeField] private string? targetFolder;
+        [SerializeField] private string? sourceFolder;
+
+        private const string DefaultTargetFolder = "Assets";
+        private const string DefaultSourceFolder = "Assets";
+
+        public event Action<string, string>? TargetChanged;
+        public event Action<string, string>? SourceChanged;
+
+        public string TargetFolder
+        {
+            get => targetFolder ?? DefaultTargetFolder;
+            set
+            {
+                if (targetFolder == value)
+                {
+                    return;
+                }
+
+                TargetChanged?.Invoke(TargetFolder, value);
+                targetFolder = value;
+                SaveDirty();
+            }
+        }
+
+        public string SourceFolder
+        {
+            get => sourceFolder ?? DefaultSourceFolder;
+            set
+            {
+                if (sourceFolder == value)
+                {
+                    return;
+                }
+
+                SourceChanged?.Invoke(SourceFolder, value);
+                sourceFolder = value;
+                SaveDirty();
+            }
+        }
+
+        private void Awake()
+        {
+            SetDefaultFolder();
+        }
+
+        private void SetDefaultFolder()
+        {
+            if (targetFolder is null)
+            {
+                TargetFolder = DefaultTargetFolder;
+            }
+
+            if (sourceFolder is null)
+            {
+                SourceFolder = DefaultSourceFolder;
+            }
+        }
+
+        private void SaveDirty()
+        {
+            Save(this);
+            EditorUtility.SetDirty(this);
+            AssetDatabase.SaveAssets();
+        }
+    }
+}
