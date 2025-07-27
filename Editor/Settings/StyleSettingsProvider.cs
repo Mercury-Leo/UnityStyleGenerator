@@ -1,10 +1,9 @@
+#nullable enable
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine.UIElements;
-using UnityStyleGenerator.Editor.StyleClasses;
 
-#nullable enable
-namespace UnityStyleGenerator.Editor.Settings
+namespace LeosTools.Editor
 {
     internal sealed class StyleSettingsProvider : SettingsProvider
     {
@@ -19,12 +18,12 @@ namespace UnityStyleGenerator.Editor.Settings
 
             rootElement.Add(Utility.CreateTitle("Style Generator"));
 
-            var targetRow = Utility.CreateRowField("Target Folder", settings.TargetFolder,
+            var targetRow = Utility.CreateBrowseField("Target Folder", settings.TargetFolder,
                 "Where the generated class will be created at",
                 "Folder to create the generated style file",
                 result => settings.TargetFolder = result);
 
-            var ussRow = Utility.CreateRowField("USS Folder", settings.SourceFolder,
+            var ussRow = Utility.CreateBrowseField("USS Folder", settings.SourceFolder,
                 "Will create the folder's USS files's style classes",
                 "Folder to find USS files to generate from",
                 result => settings.SourceFolder = result);
@@ -32,17 +31,28 @@ namespace UnityStyleGenerator.Editor.Settings
             rootElement.Add(targetRow);
             rootElement.Add(ussRow);
 
-            var generateButton = new Button(StyleClassesGenerator.Generate)
+            var prefixField = Utility.CreateTextField("Style Prefix", settings.Prefix,
+                "The prefix assigned to each style class");
+
+            var field = prefixField.Q<TextField>();
+
+            field?.RegisterCallback<FocusOutEvent>(_ =>
             {
-                text = "Generate",
-                style =
+                var name = Utility.SanitizeClassName(field.value);
+
+                if (name is null)
                 {
-                    marginTop = 20,
-                    marginLeft = new Length(30, LengthUnit.Percent),
-                    marginRight = new Length(30, LengthUnit.Percent),
-                },
-                tooltip = "Generate Style Classes"
-            };
+                    field.value = settings.Prefix;
+                    return;
+                }
+
+                settings.Prefix = name;
+            });
+
+            rootElement.Add(prefixField);
+
+            var generateButton =
+                Utility.CreateButton("Generate", StyleClassesGenerator.Generate, "Generate Style Classes");
 
             rootElement.Add(generateButton);
         }

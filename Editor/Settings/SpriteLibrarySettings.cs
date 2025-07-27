@@ -1,21 +1,25 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-#nullable enable
-namespace UnityStyleGenerator.Editor.Settings
+namespace LeosTools.Editor
 {
     [FilePath("ProjectSettings/SpriteLibrarySettings.asset", FilePathAttribute.Location.ProjectFolder)]
     public class SpriteLibrarySettings : ScriptableSingleton<SpriteLibrarySettings>
     {
         [SerializeField] private string? targetFolder;
+        [SerializeField] private string? themeName;
+        [SerializeField] private string? prefix;
 
         [SerializeField] public List<LibraryGroup> Groups = new();
 
         [SerializeField] public bool GenerateTheme = true;
 
         private const string DefaultTargetFolder = "Assets";
+        private const string DefaultThemeName = "SpriteLibraryTheme";
+        private const string DefaultPrefix = "Sprite_";
 
         public string TargetFolder
         {
@@ -33,7 +37,31 @@ namespace UnityStyleGenerator.Editor.Settings
             }
         }
 
+        public string ThemeName
+        {
+            get => themeName ?? DefaultThemeName;
+            set
+            {
+                ThemeNameChanged?.Invoke(ThemeName, value);
+                themeName = value;
+                SaveDirty();
+            }
+        }
+
+        public string Prefix
+        {
+            get => prefix ?? DefaultPrefix;
+            set
+            {
+                PrefixChanged?.Invoke(Prefix);
+                prefix = value;
+                SaveDirty();
+            }
+        }
+
         public event Action<string, string>? TargetChanged;
+        public event Action<string, string>? ThemeNameChanged;
+        public event Action<string>? PrefixChanged;
 
         private void Awake()
         {

@@ -2,13 +2,12 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
-using UnityStyleGenerator.Editor.SpriteLibrary;
 
-namespace UnityStyleGenerator.Editor.Settings
+namespace LeosTools.Editor
 {
     internal sealed class SpriteLibrarySettingsProvider : SettingsProvider
     {
-        public SpriteLibrarySettingsProvider(string path, SettingsScope scopes, IEnumerable<string> keywords = null) :
+        private SpriteLibrarySettingsProvider(string path, SettingsScope scopes, IEnumerable<string> keywords = null) :
             base(path, scopes, keywords) { }
 
         public override void OnActivate(string searchContext, VisualElement rootElement)
@@ -19,7 +18,7 @@ namespace UnityStyleGenerator.Editor.Settings
 
             rootElement.Add(Utility.CreateTitle("Sprite Library"));
 
-            var targetRow = Utility.CreateRowField("Target Folder", settings.TargetFolder,
+            var targetRow = Utility.CreateBrowseField("Target Folder", settings.TargetFolder,
                 "Where the generated class will be created at",
                 "Folder to create the generated style file",
                 result => settings.TargetFolder = result);
@@ -32,16 +31,58 @@ namespace UnityStyleGenerator.Editor.Settings
                 value = settings.GenerateTheme
             };
 
-            generateTheme.RegisterValueChangedCallback((evt) => { settings.GenerateTheme = evt.newValue; });
+            generateTheme.RegisterValueChangedCallback(evt => { settings.GenerateTheme = evt.newValue; });
 
             rootElement.Add(generateTheme);
 
-            var libraryButton = new Button(() => ScriptableObject.CreateInstance<SpriteLibraryWindow>().Show())
+            var nameField = Utility.CreateTextField("Theme Name", settings.ThemeName, "Name of the Theme class");
+
+            var field = nameField.Q<TextField>();
+
+            field?.RegisterCallback<FocusOutEvent>(_ =>
             {
-                text = "Open Sprite Library"
-            };
-            
+                var name = Utility.SanitizeName(field.value);
+
+                if (name is null)
+                {
+                    field.value = settings.ThemeName;
+                    return;
+                }
+
+                settings.ThemeName = name;
+            });
+
+            rootElement.Add(nameField);
+
+            var prefixField = Utility.CreateTextField("Sprite Prefix", settings.Prefix,
+                "The prefix assigned to each sprite class");
+
+            var fieldPrefix = prefixField.Q<TextField>();
+
+            fieldPrefix?.RegisterCallback<FocusOutEvent>(_ =>
+            {
+                var name = Utility.SanitizeClassName(fieldPrefix.value);
+
+                if (name is null)
+                {
+                    fieldPrefix.value = settings.Prefix;
+                    return;
+                }
+
+                settings.Prefix = name;
+            });
+
+            rootElement.Add(prefixField);
+
+            var libraryButton = Utility.CreateButton("Open Sprite Library",
+                () => ScriptableObject.CreateInstance<SpriteLibraryWindow>().Show());
+
             rootElement.Add(libraryButton);
+
+            var generateButton =
+                Utility.CreateButton("Generate", SpriteLibraryGenerator.Generate, "Generate Sprite Library");
+
+            rootElement.Add(generateButton);
         }
 
         [SettingsProvider]

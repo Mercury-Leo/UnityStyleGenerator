@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.IO;
 using System.Text;
@@ -5,12 +6,15 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-#nullable enable
-namespace UnityStyleGenerator.Editor
+namespace LeosTools.Editor
 {
     internal static class Utility
     {
-        public static VisualElement CreateRowField(string title, string initialValue, string titleTooltip,
+        public const string ClassEnding = ".cs";
+        public const string UssClassEnding = ".uss";
+        public const string ThemeClassEnding = ".tss";
+
+        public static VisualElement CreateBrowseField(string title, string initialValue, string titleTooltip,
             string browseTooltip, Action<string> onFolderSelected)
         {
             var row = new VisualElement
@@ -85,6 +89,49 @@ namespace UnityStyleGenerator.Editor
             };
         }
 
+        public static VisualElement CreateButton(string label, Action? clickAction = null, string? tooltip = null)
+        {
+            return new Button(clickAction)
+            {
+                text = label,
+                style =
+                {
+                    marginTop = 20,
+                    marginLeft = new Length(30, LengthUnit.Percent),
+                    marginRight = new Length(30, LengthUnit.Percent),
+                },
+                tooltip = tooltip
+            };
+        }
+
+        public static VisualElement CreateTextField(string label, string initialValue, string tooltip)
+        {
+            var row = new VisualElement
+            {
+                style =
+                {
+                    flexDirection = FlexDirection.Row,
+                    alignItems = Align.Center,
+                    marginTop = 5
+                }
+            };
+
+            var textField = new TextField(label)
+            {
+                value = initialValue,
+                style =
+                {
+                    flexGrow = 1,
+                    marginRight = 5
+                },
+                tooltip = tooltip
+            };
+
+            row.Add(textField);
+
+            return row;
+        }
+
         public static string? SanitizeName(string name)
         {
             if (string.IsNullOrEmpty(name))
@@ -96,6 +143,27 @@ namespace UnityStyleGenerator.Editor
             foreach (var c in name)
             {
                 builder.Append(char.IsLetterOrDigit(c) ? c : string.Empty);
+            }
+
+            if (char.IsDigit(builder[0]))
+            {
+                builder.Insert(0, '_');
+            }
+
+            return builder.ToString();
+        }
+
+        public static string? SanitizeClassName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return null;
+            }
+
+            var builder = new StringBuilder();
+            foreach (var c in name)
+            {
+                builder.Append(char.IsLetterOrDigit(c) || c == '_' ? c : string.Empty);
             }
 
             if (char.IsDigit(builder[0]))
@@ -123,6 +191,25 @@ namespace UnityStyleGenerator.Editor
             catch (Exception e)
             {
                 Debug.LogError($"Failed to create {path}: {e}");
+                return false;
+            }
+        }
+
+        public static bool TryDeleteFile(string targetFile)
+        {
+            try
+            {
+                if (!File.Exists(targetFile))
+                {
+                    return false;
+                }
+
+                AssetDatabase.DeleteAsset(targetFile);
+                return true;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Failed to delete style classes: {e}");
                 return false;
             }
         }

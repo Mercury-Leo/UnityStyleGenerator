@@ -4,9 +4,8 @@ using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
-using UnityStyleGenerator.Editor.Settings;
 
-namespace UnityStyleGenerator.Editor.SpriteLibrary
+namespace LeosTools.Editor
 {
     public class SpriteLibraryWindow : EditorWindow
     {
@@ -14,10 +13,10 @@ namespace UnityStyleGenerator.Editor.SpriteLibrary
         private ScrollView _scrollView;
         private TextField _newGroupNameField;
 
-        [MenuItem("Window/Sprite Library Settings")]
+        [MenuItem("Tools/Leo's Tools/Sprite Library")]
         public static void Open()
         {
-            var window = GetWindow<SpriteLibraryWindow>("Sprite Library Settings");
+            var window = GetWindow<SpriteLibraryWindow>("Sprite Library");
             window.minSize = new Vector2(500, 400);
         }
 
@@ -45,6 +44,8 @@ namespace UnityStyleGenerator.Editor.SpriteLibrary
             _scrollView = new ScrollView { style = { flexGrow = 1 } };
             rootVisualElement.Add(_scrollView);
             BuildUI();
+            rootVisualElement.Add(Utility.CreateButton("Generate", SpriteLibraryGenerator.Generate,
+                "Generate Sprite Library"));
         }
 
         private void OnDisable()

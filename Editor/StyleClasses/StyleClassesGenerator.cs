@@ -1,66 +1,39 @@
 #nullable enable
-using System;
 using System.CodeDom.Compiler;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEditor;
-using UnityEngine;
 using UnityEngine.UIElements;
-using UnityStyleGenerator.Editor.Settings;
 
-namespace UnityStyleGenerator.Editor.StyleClasses
+namespace LeosTools.Editor
 {
     public static class StyleClassesGenerator
     {
-        private const string UssClassEnding = ".uss";
-        private const string StyleClassesName = "StyleClasses.cs";
-        private const string Prefix = "Style_";
+        private static readonly StyleSettings Settings = StyleSettings.instance;
         private static readonly Regex StyleRegex = new(@"\.([\w-]+)\s*\{", RegexOptions.Compiled);
 
         [InitializeOnLoadMethod]
         private static void InitializeEditorEvents()
         {
-            StyleSettings.instance.TargetChanged += OnTargetChanged;
-            StyleSettings.instance.SourceChanged += OnSourceChanged;
+            Settings.TargetChanged += OnTargetChanged;
+            Settings.SourceChanged += OnSourceChanged;
+            Settings.PrefixChanged += OnPrefixChanged;
         }
 
-        private static void OnTargetChanged(string oldFolder, string newFolder)
-        {
-            DeleteStyleClasses(Path.Combine(oldFolder, StyleClassesName));
-            Generate(StyleSettings.instance.SourceFolder, Path.Combine(newFolder, StyleClassesName));
-        }
-
-        private static void OnSourceChanged(string oldFolder, string newFolder)
-        {
-            var targetFile = Path.Combine(StyleSettings.instance.TargetFolder, StyleClassesName);
-            DeleteStyleClasses(targetFile);
-            Generate(newFolder, targetFile);
-        }
-
-        private static void DeleteStyleClasses(string targetFile)
-        {
-            try
-            {
-                if (File.Exists(targetFile))
-                {
-                    AssetDatabase.DeleteAsset(targetFile);
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"Failed to delete style classes: {e}");
-            }
-        }
-
-        [MenuItem("Tools/UIToolkit/Generate Styles")]
+        [MenuItem("Tools/Leo's Tools/Generate Styles")]
         public static void Generate()
         {
-            Generate(StyleSettings.instance.SourceFolder,
-                Path.Combine(StyleSettings.instance.TargetFolder, StyleClassesName));
+            Generate(Settings.SourceFolder, Path.Combine(Settings.TargetFolder, GetClassName()), Settings.Prefix);
         }
 
-        public static void Generate(string sourcePath, string outputPath)
+        /// <summary>
+        /// Generates style classes files
+        /// </summary>
+        /// <param name="sourcePath">The USS folder</param>
+        /// <param name="outputPath">The generated files output</param>
+        /// <param name="prefix">Prefix to add to Style classes names</param>
+        public static void Generate(string sourcePath, string outputPath, string prefix)
         {
             var writer = new StringWriter();
             var builder = new IndentedTextWriter(writer);
@@ -68,7 +41,8 @@ namespace UnityStyleGenerator.Editor.StyleClasses
             var guids = AssetDatabase.FindAssets($"t: {nameof(StyleSheet)} t: {nameof(ThemeStyleSheet)}",
                 new[] { sourcePath });
 
-            var files = guids.Select(AssetDatabase.GUIDToAssetPath).Where(file => file.EndsWith(UssClassEnding));
+            var files = guids.Select(AssetDatabase.GUIDToAssetPath)
+                .Where(file => file.EndsWith(Utility.UssClassEnding));
 
             builder.WriteLine("//Auto-Generated. Don't modify this file!");
 
@@ -86,7 +60,7 @@ namespace UnityStyleGenerator.Editor.StyleClasses
                 var fileContent = File.ReadAllText(file);
                 var styles = StyleRegex.Matches(fileContent).Select(match => match.Groups[1].Value).Distinct();
 
-                builder.WriteLine($"public static class {Prefix}{className}");
+                builder.WriteLine($"public static class {prefix}{className}");
                 builder.WriteLine("{");
                 builder.Indent++;
 
@@ -102,6 +76,33 @@ namespace UnityStyleGenerator.Editor.StyleClasses
             }
 
             Utility.TryCreateFile(outputPath, writer.ToString());
+        }
+
+        private static void OnPrefixChanged(string prefix)
+        {
+            var targetFile = Path.Combine(Settings.TargetFolder, GetClassName());
+
+            Utility.TryDeleteFile(targetFile);
+
+            Generate(Settings.SourceFolder, Settings.TargetFolder, prefix);
+        }
+
+        private static void OnTargetChanged(string oldFolder, string newFolder)
+        {
+            Utility.TryDeleteFile(Path.Combine(oldFolder, GetClassName()));
+            Generate(Settings.SourceFolder, Path.Combine(newFolder, GetClassName()), Settings.Prefix);
+        }
+
+        private static void OnSourceChanged(string oldFolder, string newFolder)
+        {
+            var targetFile = Path.Combine(Settings.TargetFolder, GetClassName());
+            Utility.TryDeleteFile(targetFile);
+            Generate(newFolder, targetFile, Settings.Prefix);
+        }
+
+        private static string GetClassName()
+        {
+            return Settings.Prefix + Utility.ClassEnding;
         }
     }
 }
