@@ -98,7 +98,7 @@ namespace LeosTools.Editor
 
         private static string GetClassName()
         {
-            return Settings.Prefix + Utility.ClassEnding;
+            return "StyleClasses" + Utility.ClassEnding;
         }
     }
 }
