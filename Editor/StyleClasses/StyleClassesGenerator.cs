@@ -80,11 +80,7 @@ namespace LeosTools.Editor
 
         private static void OnPrefixChanged(string prefix)
         {
-            var targetFile = Path.Combine(Settings.TargetFolder, GetClassName());
-
-            Utility.TryDeleteFile(targetFile);
-
-            Generate(Settings.SourceFolder, Settings.TargetFolder, prefix);
+            Generate(Settings.SourceFolder, Path.Combine(Settings.TargetFolder, GetClassName()), prefix);
         }
 
         private static void OnTargetChanged(string oldFolder, string newFolder)
