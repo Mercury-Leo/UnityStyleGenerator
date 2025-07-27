@@ -1,6 +1,6 @@
+#nullable enable
 using System;
 using System.CodeDom.Compiler;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -10,8 +10,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using UnityStyleGenerator.Editor.Settings;
 
-#nullable enable
-namespace UnityStyleGenerator.Editor
+namespace UnityStyleGenerator.Editor.StyleClasses
 {
     public static class StyleClassesGenerator
     {
@@ -78,7 +77,7 @@ namespace UnityStyleGenerator.Editor
 
             foreach (var file in files)
             {
-                var className = SanitizeName(Path.GetFileNameWithoutExtension(file));
+                var className = Utility.SanitizeName(Path.GetFileNameWithoutExtension(file));
 
                 if (string.IsNullOrEmpty(className))
                 {
@@ -94,7 +93,7 @@ namespace UnityStyleGenerator.Editor
 
                 foreach (var style in styles)
                 {
-                    builder.WriteLine($"public const string {SanitizeName(style)} = \"{style}\";");
+                    builder.WriteLine($"public const string {Utility.SanitizeName(style)} = \"{style}\";");
                 }
 
                 builder.Indent--;
@@ -103,42 +102,7 @@ namespace UnityStyleGenerator.Editor
                 builder.WriteLine();
             }
 
-            try
-            {
-                var directory = Path.GetDirectoryName(outputPath);
-                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
-                {
-                    Directory.CreateDirectory(directory);
-                }
-
-                File.WriteAllText(outputPath, writer.ToString(), Encoding.UTF8);
-                AssetDatabase.ImportAsset(outputPath);
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"Failed to generate localized strings: {e}");
-            }
-        }
-
-        private static string? SanitizeName(string name)
-        {
-            if (string.IsNullOrEmpty(name))
-            {
-                return null;
-            }
-
-            var builder = new StringBuilder();
-            foreach (var c in name)
-            {
-                builder.Append(char.IsLetterOrDigit(c) ? c : string.Empty);
-            }
-
-            if (char.IsDigit(builder[0]))
-            {
-                builder.Insert(0, '_');
-            }
-
-            return builder.ToString();
+            Utility.TryCreateFile(outputPath, writer.ToString());
         }
     }
 }

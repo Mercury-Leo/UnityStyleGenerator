@@ -1,8 +1,7 @@
-using System;
 using System.Collections.Generic;
 using UnityEditor;
-using UnityEngine;
 using UnityEngine.UIElements;
+using UnityStyleGenerator.Editor.StyleClasses;
 
 #nullable enable
 namespace UnityStyleGenerator.Editor.Settings
@@ -18,24 +17,14 @@ namespace UnityStyleGenerator.Editor.Settings
 
             var settings = StyleSettings.instance;
 
-            var title = new Label("Style Generator")
-            {
-                style =
-                {
-                    unityFontStyleAndWeight = FontStyle.Bold,
-                    fontSize = 18,
-                    marginBottom = 10
-                }
-            };
+            rootElement.Add(Utility.CreateTitle("Style Generator"));
 
-            rootElement.Add(title);
-
-            var targetRow = CreateRowField("Target Folder", settings.TargetFolder,
+            var targetRow = Utility.CreateRowField("Target Folder", settings.TargetFolder,
                 "Where the generated class will be created at",
                 "Folder to create the generated style file",
                 result => settings.TargetFolder = result);
 
-            var ussRow = CreateRowField("USS Folder", settings.SourceFolder,
+            var ussRow = Utility.CreateRowField("USS Folder", settings.SourceFolder,
                 "Will create the folder's USS files's style classes",
                 "Folder to find USS files to generate from",
                 result => settings.SourceFolder = result);
@@ -62,68 +51,6 @@ namespace UnityStyleGenerator.Editor.Settings
         public static SettingsProvider CreateProvider()
         {
             return new StyleSettingsProvider("Leo's Tools/Style Generator", SettingsScope.Project);
-        }
-
-        private VisualElement CreateRowField(string title, string initialValue, string titleTooltip,
-            string browseTooltip, Action<string> onFolderSelected)
-        {
-            var row = new VisualElement
-            {
-                style =
-                {
-                    flexDirection = FlexDirection.Row,
-                    alignItems = Align.Center,
-                    marginTop = 5
-                }
-            };
-
-            var textField = new TextField(title)
-            {
-                value = initialValue,
-                isReadOnly = true,
-                style =
-                {
-                    flexGrow = 1,
-                    marginRight = 5
-                },
-                tooltip = titleTooltip
-            };
-
-            row.Add(textField);
-
-            var browseButton = new Button(() =>
-            {
-                var selectedFolder =
-                    EditorUtility.OpenFolderPanel("Select folder", Application.dataPath, string.Empty);
-
-                if (string.IsNullOrEmpty(selectedFolder))
-                {
-                    return;
-                }
-
-                if (!selectedFolder.StartsWith(Application.dataPath))
-                {
-                    EditorUtility.DisplayDialog("Invalid Folder",
-                        "Please pick a folder inside the project's Assets directory.", "OK");
-                    return;
-                }
-
-                var result = "Assets" + selectedFolder[Application.dataPath.Length..];
-                onFolderSelected?.Invoke(result);
-                textField.value = result;
-            })
-            {
-                text = "Browse",
-                style =
-                {
-                    width = 80,
-                },
-                tooltip = browseTooltip
-            };
-
-            row.Add(browseButton);
-
-            return row;
         }
     }
 }
