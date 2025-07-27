@@ -1,21 +1,24 @@
+#nullable enable
 using System;
 using UnityEditor;
 using UnityEngine;
 
-#nullable enable
-namespace UnityStyleGenerator.Editor.Settings
+namespace LeosTools.Editor
 {
     [FilePath("ProjectSettings/StyleSettings.asset", FilePathAttribute.Location.ProjectFolder)]
     public class StyleSettings : ScriptableSingleton<StyleSettings>
     {
         [SerializeField] private string? targetFolder;
         [SerializeField] private string? sourceFolder;
+        [SerializeField] private string? prefix;
 
         private const string DefaultTargetFolder = "Assets";
         private const string DefaultSourceFolder = "Assets";
+        private const string DefaultPrefix = "Style_";
 
         public event Action<string, string>? TargetChanged;
         public event Action<string, string>? SourceChanged;
+        public event Action<string>? PrefixChanged;
 
         public string TargetFolder
         {
@@ -45,6 +48,17 @@ namespace UnityStyleGenerator.Editor.Settings
 
                 SourceChanged?.Invoke(SourceFolder, value);
                 sourceFolder = value;
+                SaveDirty();
+            }
+        }
+
+        public string Prefix
+        {
+            get => prefix ?? DefaultPrefix;
+            set
+            {
+                PrefixChanged?.Invoke(Prefix);
+                prefix = value;
                 SaveDirty();
             }
         }

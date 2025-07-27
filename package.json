@@ -1,12 +1,14 @@
 {
   "name": "com.leosclockworks.stylegenerator",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "displayName": "Style Generator",
-  "description": "Generates classes for USS",
+  "description": "Generates classes for USS & Sprites",
   "keywords": [
     "UIToolKit",
     "USS",
-    "Style"
+    "Style",
+    "TSS",
+    "Sprite"
   ],
   "author": {
     "name": "Mercury Finnegan",
