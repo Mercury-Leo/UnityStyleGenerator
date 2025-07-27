@@ -48,6 +48,10 @@ namespace LeosTools.Editor
 
             builder.WriteLine();
 
+            builder.WriteLine("public record StyleEntry\n{\n    public string Class;\n}");
+
+            builder.WriteLine();
+
             foreach (var file in files)
             {
                 var className = Utility.SanitizeName(Path.GetFileNameWithoutExtension(file));
@@ -60,13 +64,14 @@ namespace LeosTools.Editor
                 var fileContent = File.ReadAllText(file);
                 var styles = StyleRegex.Matches(fileContent).Select(match => match.Groups[1].Value).Distinct();
 
-                builder.WriteLine($"public static class {prefix}{className}");
+                builder.WriteLine($"public class {prefix}{className}");
                 builder.WriteLine("{");
                 builder.Indent++;
 
                 foreach (var style in styles)
                 {
-                    builder.WriteLine($"public const string {Utility.SanitizeName(style)} = \"{style}\";");
+                      builder.WriteLine(
+                          $"public static StyleEntry {Utility.SanitizeName(style)} = new()  {{ Class = \"{style}\" }};");
                 }
 
                 builder.Indent--;
