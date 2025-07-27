@@ -96,9 +96,10 @@ namespace UnityStyleGenerator.Editor.SpriteLibrary
             }
 
             const int typeCode = 3;
+            
+            string name = asset is Sprite sprite ? sprite.name : Path.GetFileNameWithoutExtension(path);
 
-            string fileNameWithoutExt = Path.GetFileNameWithoutExtension(path);
-            return $"project://database/{path}?fileID={fileId}&guid={guid}&type={typeCode}#{fileNameWithoutExt}";
+            return $"project://database/{path}?fileID={fileId}&guid={guid}&type={typeCode}#{name}";
         }
     }
 }

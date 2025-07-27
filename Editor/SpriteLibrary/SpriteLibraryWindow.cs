@@ -140,7 +140,7 @@ namespace UnityStyleGenerator.Editor.SpriteLibrary
                     };
                     var entryLabel = entryFoldout.Q<Label>();
                     entryLabel?.parent.Add(removeButton);
-                    var entryNameField = new TextField("Name") { value = entry.Name };
+                    var entryNameField = new TextField("Name");
                     entryNameField.RegisterValueChangedCallback(evt =>
                     {
                         entry.Name = evt.newValue;
@@ -161,8 +161,25 @@ namespace UnityStyleGenerator.Editor.SpriteLibrary
                     var spriteField = new ObjectField("Sprite") { objectType = typeof(Sprite), value = entry.Sprite };
                     spriteField.RegisterValueChangedCallback(evt =>
                     {
-                        entry.Sprite = (Sprite)evt.newValue;
+                        if (evt.newValue is not Sprite newSprite)
+                        {
+                            return;
+                        }
+
+                        string assetPath = AssetDatabase.GetAssetPath(newSprite);
+                        if (!string.IsNullOrEmpty(assetPath) && assetPath.Contains("Resources"))
+                        {
+                            Debug.LogWarning("Sprites from Resources folder are not allowed.");
+                            spriteField.SetValueWithoutNotify(entry.Sprite);
+                            return;
+                        }
+
+                        entry.Sprite = newSprite;
                         UpdateEntry(groupIndex, entryIndex, entry);
+                        if (string.IsNullOrEmpty(entryNameField.value))
+                        {
+                            entryNameField.value = entry.Sprite.name;
+                        }
                     });
                     entryFoldout.Add(spriteField);
                 }
