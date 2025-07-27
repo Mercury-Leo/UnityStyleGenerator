@@ -13,7 +13,7 @@ namespace UnityStyleGenerator.Editor.SpriteLibrary
         private static readonly SpriteLibrarySettings Settings = SpriteLibrarySettings.instance;
         private const string ThemeClassName = "SpriteLibraryTheme.tss";
 
-        [MenuItem("Tools/UIToolkit/Generate Styles")]
+        [MenuItem("Tools/UIToolkit/Generate Sprite Library")]
         public static void Generate()
         {
             Generate(Settings.TargetFolder);
@@ -43,9 +43,9 @@ namespace UnityStyleGenerator.Editor.SpriteLibrary
         {
             var themeBuilder = new StringBuilder().AppendLine();
 
-            foreach (var group in groups)
+            foreach (var groupPath in groups)
             {
-                themeBuilder.AppendLine($"@import url(\"/{group}.uss\");");
+                themeBuilder.AppendLine($"@import url(\"/{groupPath.FixSlashes()}\");");
             }
 
             var outputPath = Path.Combine(targetFolder, ThemeClassName);
@@ -69,14 +69,7 @@ namespace UnityStyleGenerator.Editor.SpriteLibrary
 
             string assetPath = Path.Combine(targetFolder, groupName + ".uss");
 
-            string? directory = Path.GetDirectoryName(assetPath);
-            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
-
-            File.WriteAllText(assetPath, builder.ToString());
-            AssetDatabase.ImportAsset(assetPath);
+            Utility.TryCreateFile(assetPath, builder.ToString());
             return assetPath;
         }
 

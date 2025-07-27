@@ -126,5 +126,10 @@ namespace UnityStyleGenerator.Editor
                 return false;
             }
         }
+
+        public static string FixSlashes(this string input)
+        {
+            return input.Replace("\\", "/");
+        }
     }
 }
