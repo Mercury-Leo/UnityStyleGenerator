@@ -1,6 +1,6 @@
 {
   "name": "com.leosclockworks.stylegenerator",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "displayName": "Style Generator",
   "description": "Generates classes for USS & Sprites",
   "keywords": [
