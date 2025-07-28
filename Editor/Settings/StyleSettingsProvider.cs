@@ -38,7 +38,7 @@ namespace LeosTools.Editor
 
             field?.RegisterCallback<FocusOutEvent>(_ =>
             {
-                var name = Utility.SanitizeClassName(field.value);
+                var name = Utility.SanitizeName(field.value, true);
 
                 if (name is null)
                 {
