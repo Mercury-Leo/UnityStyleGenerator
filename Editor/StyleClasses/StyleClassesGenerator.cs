@@ -12,11 +12,13 @@ namespace LeosTools.Editor
     {
         private static readonly StyleSettings Settings = StyleSettings.instance;
         private static readonly Regex StyleRegex = new(@"\.([\w-]+)\s*\{", RegexOptions.Compiled);
+        private const string StyleClassesName = "StyleClasses.g.cs";
 
         [MenuItem("Tools/Leo's Tools/Generate Styles")]
         public static void Generate()
         {
-            Generate(Settings.SourceFolder, Path.Combine(Settings.TargetFolder, GetClassName()), Settings.Prefix, true);
+            Generate(Settings.SourceFolder, Path.Combine(Settings.TargetFolder, StyleClassesName), Settings.Prefix,
+                true);
         }
 
         /// <summary>
@@ -78,11 +80,6 @@ namespace LeosTools.Editor
             }
 
             Utility.TryCreateFile(outputPath, writer.ToString());
-        }
-
-        private static string GetClassName()
-        {
-            return "StyleClasses.g" + Utility.ClassEnding;
         }
     }
 }

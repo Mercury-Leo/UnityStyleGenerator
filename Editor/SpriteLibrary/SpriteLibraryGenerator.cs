@@ -10,7 +10,7 @@ namespace LeosTools.Editor
     public static class SpriteLibraryGenerator
     {
         private static readonly SpriteLibrarySettings Settings = SpriteLibrarySettings.instance;
-        private const string SpriteClassesName = "SpriteClasses.cs";
+        private const string SpriteClassesName = "SpriteClasses.g.cs";
 
         [MenuItem("Tools/Leo's Tools/Generate Sprite Library")]
         public static void Generate()
