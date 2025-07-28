@@ -13,18 +13,10 @@ namespace LeosTools.Editor
         private static readonly StyleSettings Settings = StyleSettings.instance;
         private static readonly Regex StyleRegex = new(@"\.([\w-]+)\s*\{", RegexOptions.Compiled);
 
-        [InitializeOnLoadMethod]
-        private static void InitializeEditorEvents()
-        {
-            Settings.TargetChanged += OnTargetChanged;
-            Settings.SourceChanged += OnSourceChanged;
-            Settings.PrefixChanged += OnPrefixChanged;
-        }
-
         [MenuItem("Tools/Leo's Tools/Generate Styles")]
         public static void Generate()
         {
-            Generate(Settings.SourceFolder, Path.Combine(Settings.TargetFolder, GetClassName()), Settings.Prefix);
+            Generate(Settings.SourceFolder, Path.Combine(Settings.TargetFolder, GetClassName()), Settings.Prefix, true);
         }
 
         /// <summary>
@@ -33,7 +25,9 @@ namespace LeosTools.Editor
         /// <param name="sourcePath">The USS folder</param>
         /// <param name="outputPath">The generated files output</param>
         /// <param name="prefix">Prefix to add to Style classes names</param>
-        public static void Generate(string sourcePath, string outputPath, string prefix)
+        /// <param name="generateStyleEntry"></param>
+        public static void Generate(string sourcePath, string outputPath, string prefix,
+            bool generateStyleEntry = false)
         {
             var writer = new StringWriter();
             var builder = new IndentedTextWriter(writer);
@@ -48,9 +42,12 @@ namespace LeosTools.Editor
 
             builder.WriteLine();
 
-            builder.WriteLine("public record StyleEntry\n{\n    public string Class;\n}");
+            if (generateStyleEntry)
+            {
+                builder.WriteLine("public record StyleEntry\n{\n    public string Class;\n}");
 
-            builder.WriteLine();
+                builder.WriteLine();
+            }
 
             foreach (var file in files)
             {
@@ -70,8 +67,8 @@ namespace LeosTools.Editor
 
                 foreach (var style in styles)
                 {
-                      builder.WriteLine(
-                          $"public static StyleEntry {Utility.SanitizeName(style)} = new()  {{ Class = \"{style}\" }};");
+                    builder.WriteLine(
+                        $"public static StyleEntry {Utility.SanitizeName(style, false, true)} = new()  {{ Class = \"{style}\" }};");
                 }
 
                 builder.Indent--;
@@ -83,27 +80,9 @@ namespace LeosTools.Editor
             Utility.TryCreateFile(outputPath, writer.ToString());
         }
 
-        private static void OnPrefixChanged(string prefix)
-        {
-            Generate(Settings.SourceFolder, Path.Combine(Settings.TargetFolder, GetClassName()), prefix);
-        }
-
-        private static void OnTargetChanged(string oldFolder, string newFolder)
-        {
-            Utility.TryDeleteFile(Path.Combine(oldFolder, GetClassName()));
-            Generate(Settings.SourceFolder, Path.Combine(newFolder, GetClassName()), Settings.Prefix);
-        }
-
-        private static void OnSourceChanged(string oldFolder, string newFolder)
-        {
-            var targetFile = Path.Combine(Settings.TargetFolder, GetClassName());
-            Utility.TryDeleteFile(targetFile);
-            Generate(newFolder, targetFile, Settings.Prefix);
-        }
-
         private static string GetClassName()
         {
-            return "StyleClasses" + Utility.ClassEnding;
+            return "StyleClasses.g" + Utility.ClassEnding;
         }
     }
 }

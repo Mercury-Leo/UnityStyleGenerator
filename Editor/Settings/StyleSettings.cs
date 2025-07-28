@@ -16,10 +16,6 @@ namespace LeosTools.Editor
         private const string DefaultSourceFolder = "Assets";
         private const string DefaultPrefix = "Style_";
 
-        public event Action<string, string>? TargetChanged;
-        public event Action<string, string>? SourceChanged;
-        public event Action<string>? PrefixChanged;
-
         public string TargetFolder
         {
             get => targetFolder ?? DefaultTargetFolder;
@@ -30,7 +26,6 @@ namespace LeosTools.Editor
                     return;
                 }
 
-                TargetChanged?.Invoke(TargetFolder, value);
                 targetFolder = value;
                 SaveDirty();
             }
@@ -46,7 +41,6 @@ namespace LeosTools.Editor
                     return;
                 }
 
-                SourceChanged?.Invoke(SourceFolder, value);
                 sourceFolder = value;
                 SaveDirty();
             }
@@ -57,7 +51,6 @@ namespace LeosTools.Editor
             get => prefix ?? DefaultPrefix;
             set
             {
-                PrefixChanged?.Invoke(Prefix);
                 prefix = value;
                 SaveDirty();
             }

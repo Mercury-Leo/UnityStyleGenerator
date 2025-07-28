@@ -12,14 +12,6 @@ namespace LeosTools.Editor
         private static readonly SpriteLibrarySettings Settings = SpriteLibrarySettings.instance;
         private const string SpriteClassesName = "SpriteClasses.cs";
 
-        [InitializeOnLoadMethod]
-        private static void InitializeEditorEvents()
-        {
-            Settings.TargetChanged += OnTargetChanged;
-            Settings.ThemeNameChanged += OnThemeNameChanged;
-            Settings.PrefixChanged += OnPrefixChanged;
-        }
-
         [MenuItem("Tools/Leo's Tools/Generate Sprite Library")]
         public static void Generate()
         {
@@ -95,38 +87,6 @@ namespace LeosTools.Editor
             var styleField = entry.Type is SpriteStyleType.Background ? "background-image" : "cursor";
             builder.AppendLine($"{styleField}: url(\"{GetProjectDatabaseUrl(entry.Sprite)}\");");
             builder.AppendLine("}");
-        }
-
-        private static void OnTargetChanged(string oldFolder, string newFolder)
-        {
-            Utility.TryDeleteFile(Path.Combine(oldFolder, SpriteClassesName));
-            Utility.TryDeleteFile(Path.Combine(oldFolder, Settings.ThemeName + Utility.ThemeClassEnding));
-
-            foreach (var group in Settings.Groups)
-            {
-                if (!group.IsValid())
-                {
-                    continue;
-                }
-
-                string assetPath = Path.Combine(oldFolder, group.Name + Utility.UssClassEnding);
-                Utility.TryDeleteFile(assetPath);
-            }
-
-            Generate(newFolder, Settings.ThemeName, Settings.Prefix);
-        }
-
-        private static void OnThemeNameChanged(string oldName, string newName)
-        {
-            Utility.TryDeleteFile(Path.Combine(Settings.TargetFolder, oldName + Utility.ThemeClassEnding));
-            Generate(Settings.TargetFolder, newName, Settings.Prefix);
-        }
-
-        private static void OnPrefixChanged(string prefix)
-        {
-            Utility.TryDeleteFile(Path.Combine(Settings.TargetFolder, SpriteClassesName));
-            StyleClassesGenerator.Generate(Settings.TargetFolder,
-                Path.Combine(Settings.TargetFolder, SpriteClassesName), prefix);
         }
 
         private static string? GetProjectDatabaseUrl(Object asset)

@@ -31,7 +31,6 @@ namespace LeosTools.Editor
                     return;
                 }
 
-                TargetChanged?.Invoke(TargetFolder, value);
                 targetFolder = value;
                 SaveDirty();
             }
@@ -42,7 +41,6 @@ namespace LeosTools.Editor
             get => themeName ?? DefaultThemeName;
             set
             {
-                ThemeNameChanged?.Invoke(ThemeName, value);
                 themeName = value;
                 SaveDirty();
             }
@@ -53,15 +51,10 @@ namespace LeosTools.Editor
             get => prefix ?? DefaultPrefix;
             set
             {
-                PrefixChanged?.Invoke(Prefix);
                 prefix = value;
                 SaveDirty();
             }
         }
-
-        public event Action<string, string>? TargetChanged;
-        public event Action<string, string>? ThemeNameChanged;
-        public event Action<string>? PrefixChanged;
 
         private void Awake()
         {

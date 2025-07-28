@@ -132,7 +132,7 @@ namespace LeosTools.Editor
             return row;
         }
 
-        public static string? SanitizeName(string name)
+        public static string? SanitizeName(string name, bool keepHyphens = false, bool capitalizeFirst = false)
         {
             if (string.IsNullOrEmpty(name))
             {
@@ -140,33 +140,34 @@ namespace LeosTools.Editor
             }
 
             var builder = new StringBuilder();
+            bool capitalizeNext = capitalizeFirst;
+
             foreach (var c in name)
             {
-                builder.Append(char.IsLetterOrDigit(c) ? c : string.Empty);
+                if (c == '-')
+                {
+                    if (keepHyphens)
+                    {
+                        builder.Append('-');
+                    }
+                    else
+                    {
+                        capitalizeNext = true;
+                    }
+
+                    continue;
+                }
+
+                if (!char.IsLetterOrDigit(c) && c != '_')
+                {
+                    continue;
+                }
+
+                builder.Append(capitalizeNext && char.IsLetter(c) ? char.ToUpper(c) : c);
+                capitalizeNext = false;
             }
 
-            if (char.IsDigit(builder[0]))
-            {
-                builder.Insert(0, '_');
-            }
-
-            return builder.ToString();
-        }
-
-        public static string? SanitizeClassName(string name)
-        {
-            if (string.IsNullOrEmpty(name))
-            {
-                return null;
-            }
-
-            var builder = new StringBuilder();
-            foreach (var c in name)
-            {
-                builder.Append(char.IsLetterOrDigit(c) || c == '_' ? c : string.Empty);
-            }
-
-            if (char.IsDigit(builder[0]))
+            if (builder.Length > 0 && char.IsDigit(builder[0]))
             {
                 builder.Insert(0, '_');
             }
