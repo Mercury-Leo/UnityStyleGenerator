@@ -3,10 +3,11 @@ using System.CodeDom.Compiler;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using LeosTools.Editor;
 using UnityEditor;
 using UnityEngine.UIElements;
 
-namespace LeosTools.Editor
+namespace StyleGenerator.Editor
 {
     public static class StyleClassesGenerator
     {

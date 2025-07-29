@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using LeosTools.Editor;
+using StyleGenerator.Editor;
 using UnityEditor;
 using UnityEngine;
 
-namespace LeosTools.Editor
+namespace SpriteLibrary.Editor
 {
     public static class SpriteLibraryGenerator
     {
