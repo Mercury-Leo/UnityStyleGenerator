@@ -1,9 +1,10 @@
 #nullable enable
 using System.Collections.Generic;
+using LeosTools.Editor;
 using UnityEditor;
 using UnityEngine.UIElements;
 
-namespace LeosTools.Editor
+namespace StyleGenerator.Editor
 {
     internal sealed class StyleSettingsProvider : SettingsProvider
     {

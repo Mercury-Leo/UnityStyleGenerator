@@ -1,9 +1,10 @@
 using System.Collections.Generic;
+using LeosTools.Editor;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace LeosTools.Editor
+namespace SpriteLibrary.Editor
 {
     internal sealed class SpriteLibrarySettingsProvider : SettingsProvider
     {

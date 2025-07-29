@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace LeosTools.Editor
+namespace SpriteLibrary.Editor
 {
     [FilePath("ProjectSettings/SpriteLibrarySettings.asset", FilePathAttribute.Location.ProjectFolder)]
     public class SpriteLibrarySettings : ScriptableSingleton<SpriteLibrarySettings>

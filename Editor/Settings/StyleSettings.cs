@@ -1,9 +1,8 @@
 #nullable enable
-using System;
 using UnityEditor;
 using UnityEngine;
 
-namespace LeosTools.Editor
+namespace StyleGenerator.Editor
 {
     [FilePath("ProjectSettings/StyleSettings.asset", FilePathAttribute.Location.ProjectFolder)]
     public class StyleSettings : ScriptableSingleton<StyleSettings>

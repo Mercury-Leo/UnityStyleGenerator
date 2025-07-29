@@ -1,11 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
+using LeosTools.Editor;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace LeosTools.Editor
+namespace SpriteLibrary.Editor
 {
     public class SpriteLibraryWindow : EditorWindow
     {
