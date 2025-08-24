@@ -66,6 +66,10 @@ namespace SpriteLibrary.Editor
         {
             var builder = new StringBuilder();
 
+            CreateSpriteVariables(entries, groupName, builder);
+
+            builder.AppendLine('\n');
+
             foreach (var entry in entries)
             {
                 if (!entry.IsValid())
@@ -76,10 +80,29 @@ namespace SpriteLibrary.Editor
                 CreateSpriteClass(entry, builder);
             }
 
+
+
             string assetPath = Path.Combine(targetFolder, groupName + Utility.UssClassEnding);
 
             Utility.TryCreateFile(assetPath, builder.ToString());
             return assetPath;
+        }
+
+        private static void CreateSpriteVariables(IEnumerable<LibraryEntry> entries, string groupName, StringBuilder builder)
+        {
+            builder.AppendLine(":root {");
+            foreach (var entry in entries)
+            {
+                if (!entry.IsValid())
+                {
+                    continue;
+                }
+
+                var styleType = entry.Type is SpriteStyleType.Background ? "background" : "cursor";
+                var variableName = $"--sprite-library-{groupName.ToLower()}-{styleType}-{Utility.SanitizeName(entry.Name).ToLower()}";
+                builder.AppendLine($"\t{variableName}: url(\"{GetProjectDatabaseUrl(entry.Sprite)}\");");
+            }
+            builder.AppendLine("}");
         }
 
         private static void CreateSpriteClass(LibraryEntry entry, StringBuilder builder)
