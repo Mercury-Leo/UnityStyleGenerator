@@ -77,13 +77,22 @@ namespace SpriteLibrary.Editor
                     continue;
                 }
 
-                CreateSpriteClass(entry, builder);
+                CreateSpriteClass(entry, groupName, builder);
             }
 
             string assetPath = Path.Combine(targetFolder, groupName + Utility.UssClassEnding);
 
             Utility.TryCreateFile(assetPath, builder.ToString());
             return assetPath;
+        }
+
+        private static void CreateSpriteClass(LibraryEntry entry, string groupName, StringBuilder builder)
+        {
+            string? className = Utility.SanitizeName(entry.Name);
+            builder.AppendLine($".{groupName.ToLower()}-{className.ToLower()} {{");
+            builder.AppendLine($"\t{StringFromStyleType(entry.Type)}: url(\"{GetProjectDatabaseUrl(entry.Sprite)}\");");
+            builder.AppendLine("}");
+            builder.AppendLine();
         }
 
         private static void CreateSpriteVariables(IEnumerable<LibraryEntry> entries, string groupName, StringBuilder builder)
@@ -99,15 +108,6 @@ namespace SpriteLibrary.Editor
                 var variableName = $"--sprite-library-{groupName.ToLower()}-{StringFromStyleType(entry.Type)}-{Utility.SanitizeName(entry.Name).ToLower()}";
                 builder.AppendLine($"\t{variableName}: url(\"{GetProjectDatabaseUrl(entry.Sprite)}\");");
             }
-            builder.AppendLine("}");
-        }
-
-        private static void CreateSpriteClass(LibraryEntry entry, StringBuilder builder)
-        {
-            string? className = Utility.SanitizeName(entry.Name);
-            builder.AppendLine($".{className} {{");
-            var styleField = StringFromStyleType(entry.Type);
-            builder.AppendLine($"{styleField}: url(\"{GetProjectDatabaseUrl(entry.Sprite)}\");");
             builder.AppendLine("}");
         }
 
