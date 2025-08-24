@@ -73,7 +73,7 @@ namespace SpriteLibrary.Editor
                     continue;
                 }
 
-                CreateSpriteClass(entry, builder);
+                CreateSpriteClass(entry, groupName, builder);
             }
 
             string assetPath = Path.Combine(targetFolder, groupName + Utility.UssClassEnding);
