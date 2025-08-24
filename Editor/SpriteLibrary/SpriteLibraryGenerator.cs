@@ -68,7 +68,7 @@ namespace SpriteLibrary.Editor
 
             CreateSpriteVariables(entries, groupName, builder);
 
-            builder.AppendLine('\n');
+            builder.AppendLine();
 
             foreach (var entry in entries)
             {
