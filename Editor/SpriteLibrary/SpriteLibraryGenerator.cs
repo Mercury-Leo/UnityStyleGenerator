@@ -89,7 +89,7 @@ namespace SpriteLibrary.Editor
             var styleField = entry.Type is SpriteStyleType.Background ? "background-image" : "cursor";
             builder.AppendLine($"\t{styleField}: url(\"{GetProjectDatabaseUrl(entry.Sprite)}\");");
             builder.AppendLine("}");
-            builder.AppendLine("\n");
+            builder.AppendLine();
         }
 
         private static string? GetProjectDatabaseUrl(Object asset)
