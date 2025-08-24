@@ -82,13 +82,14 @@ namespace SpriteLibrary.Editor
             return assetPath;
         }
 
-        private static void CreateSpriteClass(LibraryEntry entry, StringBuilder builder)
+        private static void CreateSpriteClass(LibraryEntry entry, string groupName, StringBuilder builder)
         {
             string? className = Utility.SanitizeName(entry.Name);
-            builder.AppendLine($".{className} {{");
+            builder.AppendLine($".{groupName.ToLower()}-{className.ToLower()} {{");
             var styleField = entry.Type is SpriteStyleType.Background ? "background-image" : "cursor";
-            builder.AppendLine($"{styleField}: url(\"{GetProjectDatabaseUrl(entry.Sprite)}\");");
+            builder.AppendLine($"\t{styleField}: url(\"{GetProjectDatabaseUrl(entry.Sprite)}\");");
             builder.AppendLine("}");
+            builder.AppendLine("\n");
         }
 
         private static string? GetProjectDatabaseUrl(Object asset)
