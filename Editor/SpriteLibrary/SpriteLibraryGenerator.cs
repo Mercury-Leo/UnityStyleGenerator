@@ -80,8 +80,6 @@ namespace SpriteLibrary.Editor
                 CreateSpriteClass(entry, builder);
             }
 
-
-
             string assetPath = Path.Combine(targetFolder, groupName + Utility.UssClassEnding);
 
             Utility.TryCreateFile(assetPath, builder.ToString());
@@ -98,8 +96,7 @@ namespace SpriteLibrary.Editor
                     continue;
                 }
 
-                var styleType = entry.Type is SpriteStyleType.Background ? "background" : "cursor";
-                var variableName = $"--sprite-library-{groupName.ToLower()}-{styleType}-{Utility.SanitizeName(entry.Name).ToLower()}";
+                var variableName = $"--sprite-library-{groupName.ToLower()}-{StringFromStyleType(entry.Type)}-{Utility.SanitizeName(entry.Name).ToLower()}";
                 builder.AppendLine($"\t{variableName}: url(\"{GetProjectDatabaseUrl(entry.Sprite)}\");");
             }
             builder.AppendLine("}");
@@ -109,9 +106,18 @@ namespace SpriteLibrary.Editor
         {
             string? className = Utility.SanitizeName(entry.Name);
             builder.AppendLine($".{className} {{");
-            var styleField = entry.Type is SpriteStyleType.Background ? "background-image" : "cursor";
+            var styleField = StringFromStyleType(entry.Type);
             builder.AppendLine($"{styleField}: url(\"{GetProjectDatabaseUrl(entry.Sprite)}\");");
             builder.AppendLine("}");
+        }
+
+        private static string StringFromStyleType(SpriteStyleType type)
+        {
+            return type switch
+            {
+                SpriteStyleType.Background => "background",
+                SpriteStyleType.Cursor => "cursor",
+            };
         }
 
         private static string? GetProjectDatabaseUrl(Object asset)
