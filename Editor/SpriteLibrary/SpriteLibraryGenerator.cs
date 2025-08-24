@@ -66,6 +66,10 @@ namespace SpriteLibrary.Editor
         {
             var builder = new StringBuilder();
 
+            CreateSpriteVariables(entries, groupName, builder);
+
+            builder.AppendLine();
+
             foreach (var entry in entries)
             {
                 if (!entry.IsValid())
@@ -86,10 +90,34 @@ namespace SpriteLibrary.Editor
         {
             string? className = Utility.SanitizeName(entry.Name);
             builder.AppendLine($".{groupName.ToLower()}-{className.ToLower()} {{");
-            var styleField = entry.Type is SpriteStyleType.Background ? "background-image" : "cursor";
-            builder.AppendLine($"\t{styleField}: url(\"{GetProjectDatabaseUrl(entry.Sprite)}\");");
+            builder.AppendLine($"\t{StringFromStyleType(entry.Type)}: url(\"{GetProjectDatabaseUrl(entry.Sprite)}\");");
             builder.AppendLine("}");
             builder.AppendLine();
+        }
+
+        private static void CreateSpriteVariables(IEnumerable<LibraryEntry> entries, string groupName, StringBuilder builder)
+        {
+            builder.AppendLine(":root {");
+            foreach (var entry in entries)
+            {
+                if (!entry.IsValid())
+                {
+                    continue;
+                }
+
+                var variableName = $"--sprite-library-{groupName.ToLower()}-{StringFromStyleType(entry.Type)}-{Utility.SanitizeName(entry.Name).ToLower()}";
+                builder.AppendLine($"\t{variableName}: url(\"{GetProjectDatabaseUrl(entry.Sprite)}\");");
+            }
+            builder.AppendLine("}");
+        }
+
+        private static string StringFromStyleType(SpriteStyleType type)
+        {
+            return type switch
+            {
+                SpriteStyleType.Background => "background",
+                SpriteStyleType.Cursor => "cursor",
+            };
         }
 
         private static string? GetProjectDatabaseUrl(Object asset)
