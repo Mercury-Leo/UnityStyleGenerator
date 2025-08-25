@@ -144,7 +144,7 @@ namespace LeosTools.Editor
 
             foreach (var c in name)
             {
-                if (c == '-')
+                if (c == '-' || c == ' ')
                 {
                     if (keepHyphens)
                     {
