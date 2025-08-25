@@ -88,9 +88,9 @@ namespace SpriteLibrary.Editor
 
         private static void CreateSpriteClass(LibraryEntry entry, string groupName, StringBuilder builder)
         {
-            string? className = Utility.SanitizeName(entry.Name);
-            builder.AppendLine($".{groupName.ToLower()}-{className.ToLower()} {{");
-            builder.AppendLine($"\t{StringFromStyleType(entry.Type)}: url(\"{GetProjectDatabaseUrl(entry.Sprite)}\");");
+            string? className = Utility.SanitizeName($"{groupName}-{entry.Name}", true).ToLower();
+            builder.AppendLine($".{className} {{");
+            builder.AppendLine($"\t{StringFromStyleType(entry.Type)}: var({VariableForEntry(entry, groupName)});");
             builder.AppendLine("}");
             builder.AppendLine();
         }
@@ -105,17 +105,21 @@ namespace SpriteLibrary.Editor
                     continue;
                 }
 
-                var variableName = $"--sprite-library-{groupName.ToLower()}-{StringFromStyleType(entry.Type)}-{Utility.SanitizeName(entry.Name).ToLower()}";
-                builder.AppendLine($"\t{variableName}: url(\"{GetProjectDatabaseUrl(entry.Sprite)}\");");
+                builder.AppendLine($"\t{VariableForEntry(entry, groupName)}: url(\"{GetProjectDatabaseUrl(entry.Sprite)}\");");
             }
             builder.AppendLine("}");
+        }
+
+        private static string VariableForEntry(LibraryEntry entry, string groupName)
+        {
+            return $"--sprite-library-{Utility.SanitizeName($"{groupName}-{StringFromStyleType(entry.Type)}-{entry.Name}", true).ToLower()}";
         }
 
         private static string StringFromStyleType(SpriteStyleType type)
         {
             return type switch
             {
-                SpriteStyleType.Background => "background",
+                SpriteStyleType.Background => "background-image",
                 SpriteStyleType.Cursor => "cursor",
             };
         }
