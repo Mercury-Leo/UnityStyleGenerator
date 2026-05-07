@@ -18,8 +18,7 @@ namespace StyleGenerator.Editor
         [MenuItem("Tools/Leo's Tools/Generate Styles")]
         public static void Generate()
         {
-            Generate(Settings.SourceFolder, Path.Combine(Settings.TargetFolder, StyleClassesName), Settings.Prefix,
-                true);
+            Generate(Settings.SourceFolder, Path.Combine(Settings.TargetFolder, StyleClassesName), Settings.Prefix);
         }
 
         /// <summary>
@@ -28,9 +27,7 @@ namespace StyleGenerator.Editor
         /// <param name="sourcePath">The USS folder</param>
         /// <param name="outputPath">The generated files output</param>
         /// <param name="prefix">Prefix to add to Style classes names</param>
-        /// <param name="generateStyleEntry"></param>
-        public static void Generate(string sourcePath, string outputPath, string prefix,
-            bool generateStyleEntry = false)
+        public static void Generate(string sourcePath, string outputPath, string prefix)
         {
             var writer = new StringWriter();
             var builder = new IndentedTextWriter(writer);
@@ -44,13 +41,6 @@ namespace StyleGenerator.Editor
             builder.WriteLine("//Auto-Generated. Don't modify this file!");
 
             builder.WriteLine();
-
-            if (generateStyleEntry)
-            {
-                builder.WriteLine("public record StyleEntry\n{\n    public string Class;\n}");
-
-                builder.WriteLine();
-            }
 
             foreach (var file in files)
             {
@@ -71,7 +61,7 @@ namespace StyleGenerator.Editor
                 foreach (var style in styles)
                 {
                     builder.WriteLine(
-                        $"public static StyleEntry {Utility.SanitizeName(style, false, true)} = new()  {{ Class = \"{style}\" }};");
+                        $"public static StyleEntry {Utility.SanitizeName(style, false, true)} = new(\"{style}\");");
                 }
 
                 builder.Indent--;
