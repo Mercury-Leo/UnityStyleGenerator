@@ -1,12 +1,15 @@
-/// <summary>
-/// Represents a style class
-/// </summary>
-public class StyleEntry
+namespace LeosTools.Runtime
 {
-    public readonly string Class;
-
-    public StyleEntry(string styleClass)
+    /// <summary>
+    /// Represents a style class
+    /// </summary>
+    public class StyleEntry
     {
-        Class = styleClass;
+        public readonly string Class;
+
+        public StyleEntry(string styleClass)
+        {
+            Class = styleClass;
+        }
     }
 }

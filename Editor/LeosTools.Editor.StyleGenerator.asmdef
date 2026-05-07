@@ -1,7 +1,9 @@
 {
     "name": "LeosTools.Editor.StyleGenerator",
     "rootNamespace": "",
-    "references": [],
+    "references": [
+        "GUID:6d5ef153ed33f664b949728deed8130b"
+    ],
     "includePlatforms": [
         "Editor"
     ],
