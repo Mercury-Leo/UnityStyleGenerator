@@ -41,6 +41,8 @@ namespace StyleGenerator.Editor
             builder.WriteLine("//Auto-Generated. Don't modify this file!");
 
             builder.WriteLine();
+            builder.WriteLine("using LeosTools.Runtime;");
+            builder.WriteLine();
 
             foreach (var file in files)
             {
