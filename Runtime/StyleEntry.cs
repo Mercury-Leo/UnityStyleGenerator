@@ -11,5 +11,7 @@ namespace LeosTools.Runtime
         {
             Class = styleClass;
         }
+
+        public static implicit operator string(StyleEntry entry) => entry.Class;
     }
 }
