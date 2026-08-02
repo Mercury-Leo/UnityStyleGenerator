@@ -225,6 +225,17 @@ namespace LeosTools.Editor
             return true;
         }
 
+        internal static bool MatchesSearch(string search, string groupName, string entryName)
+        {
+            if (string.IsNullOrEmpty(search))
+            {
+                return true;
+            }
+
+            return (groupName?.IndexOf(search, StringComparison.OrdinalIgnoreCase) ?? -1) >= 0 ||
+                   (entryName?.IndexOf(search, StringComparison.OrdinalIgnoreCase) ?? -1) >= 0;
+        }
+
         public static bool TryCreateFile(string path, string content)
         {
             try
