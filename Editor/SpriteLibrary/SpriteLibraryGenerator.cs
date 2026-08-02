@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -88,9 +89,24 @@ namespace SpriteLibrary.Editor
 
         private static void CreateSpriteClass(LibraryEntry entry, string groupName, StringBuilder builder)
         {
-            string? className = Utility.SanitizeName($"{groupName}-{entry.Name}", true).ToLower();
+            var className = Utility.SanitizeName($"{groupName}-{entry.Name}", true)?.ToLower();
+
+            if (string.IsNullOrEmpty(className))
+            {
+                Debug.LogWarning($"[SpriteLibrary] Skipping entry '{entry.Name}' in group '{groupName}': sanitized class name is empty.");
+                return;
+            }
+
+            var variable = VariableForEntry(entry, groupName);
+
+            if (string.IsNullOrEmpty(variable))
+            {
+                Debug.LogWarning($"[SpriteLibrary] Skipping entry '{entry.Name}' in group '{groupName}': sanitized variable name is empty.");
+                return;
+            }
+
             builder.AppendLine($".{className} {{");
-            builder.AppendLine($"\t{StringFromStyleType(entry.Type)}: var({VariableForEntry(entry, groupName)});");
+            builder.AppendLine($"\t{StringFromStyleType(entry.Type)}: var({variable});");
             builder.AppendLine("}");
             builder.AppendLine();
         }
@@ -105,14 +121,23 @@ namespace SpriteLibrary.Editor
                     continue;
                 }
 
-                builder.AppendLine($"\t{VariableForEntry(entry, groupName)}: url(\"{GetProjectDatabaseUrl(entry.Sprite)}\");");
+                var variable = VariableForEntry(entry, groupName);
+
+                if (string.IsNullOrEmpty(variable))
+                {
+                    Debug.LogWarning($"[SpriteLibrary] Skipping variable for entry '{entry.Name}' in group '{groupName}': sanitized name is empty.");
+                    continue;
+                }
+
+                builder.AppendLine($"\t{variable}: url(\"{GetProjectDatabaseUrl(entry.Sprite)}\");");
             }
             builder.AppendLine("}");
         }
 
-        private static string VariableForEntry(LibraryEntry entry, string groupName)
+        private static string? VariableForEntry(LibraryEntry entry, string groupName)
         {
-            return $"--sprite-library-{Utility.SanitizeName($"{groupName}-{StringFromStyleType(entry.Type)}-{entry.Name}", true).ToLower()}";
+            var sanitized = Utility.SanitizeName($"{groupName}-{StringFromStyleType(entry.Type)}-{entry.Name}", true)?.ToLower();
+            return string.IsNullOrEmpty(sanitized) ? null : $"--sprite-library-{sanitized}";
         }
 
         private static string StringFromStyleType(SpriteStyleType type)
@@ -121,6 +146,7 @@ namespace SpriteLibrary.Editor
             {
                 SpriteStyleType.Background => "background-image",
                 SpriteStyleType.Cursor => "cursor",
+                _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Unhandled SpriteStyleType value.")
             };
         }
 
