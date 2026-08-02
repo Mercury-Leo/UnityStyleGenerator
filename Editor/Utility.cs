@@ -207,6 +207,23 @@ namespace LeosTools.Editor
             return builder.ToString();
         }
 
+        internal static bool TryRegisterIdentifier(HashSet<string> seenIdentifiers, string? sanitizedName, string rawName, string context)
+        {
+            if (string.IsNullOrEmpty(sanitizedName))
+            {
+                Debug.LogWarning($"[StyleGenerator] Skipping '{rawName}' ({context}): sanitized name is empty.");
+                return false;
+            }
+
+            if (!seenIdentifiers.Add(sanitizedName))
+            {
+                Debug.LogWarning($"[StyleGenerator] Skipping '{rawName}' ({context}): duplicate identifier '{sanitizedName}'.");
+                return false;
+            }
+
+            return true;
+        }
+
         public static bool TryCreateFile(string path, string content)
         {
             try
