@@ -45,5 +45,13 @@ namespace StyleGenerator.Editor.Tests
             Assert.That(result, Does.Not.Contain("commented"));
             Assert.That(result, Does.Contain("live"));
         }
+
+        [Test]
+        public void ExtractClassNames_ImportStatementBeforeRule_DoesNotLeakIntoNextSelector()
+        {
+            var result = Utility.ExtractClassNames("@import url(\"theme.uss\");\n.foo { color: red; }").ToList();
+            Assert.That(result, Does.Not.Contain("uss"));
+            Assert.That(result, Does.Contain("foo"));
+        }
     }
 }

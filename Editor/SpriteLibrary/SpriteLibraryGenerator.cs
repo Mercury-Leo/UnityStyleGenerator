@@ -1,5 +1,4 @@
 #nullable enable
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -146,7 +145,7 @@ namespace SpriteLibrary.Editor
             {
                 SpriteStyleType.Background => "background-image",
                 SpriteStyleType.Cursor => "cursor",
-                _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Unhandled SpriteStyleType value.")
+                _ => throw new System.ArgumentOutOfRangeException(nameof(type), type, "Unhandled SpriteStyleType value.")
             };
         }
 

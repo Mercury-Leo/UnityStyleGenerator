@@ -146,7 +146,7 @@ namespace LeosTools.Editor
             foreach (var ruleBlock in withoutComments.Split('{'))
             {
                 var selectorText = ruleBlock;
-                var lastBrace = selectorText.LastIndexOf('}');
+                var lastBrace = Math.Max(selectorText.LastIndexOf('}'), selectorText.LastIndexOf(';'));
 
                 if (lastBrace >= 0)
                 {
@@ -210,7 +210,7 @@ namespace LeosTools.Editor
 
         internal static bool TryRegisterIdentifier(HashSet<string> seenIdentifiers, string? sanitizedName, string rawName, string context)
         {
-            if (string.IsNullOrEmpty(sanitizedName))
+            if (sanitizedName is null || sanitizedName.Length == 0)
             {
                 Debug.LogWarning($"[StyleGenerator] Skipping '{rawName}' ({context}): sanitized name is empty.");
                 return false;
