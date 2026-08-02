@@ -1,7 +1,9 @@
 #nullable enable
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -13,6 +15,9 @@ namespace LeosTools.Editor
         public const string ClassEnding = ".cs";
         public const string UssClassEnding = ".uss";
         public const string ThemeClassEnding = ".tss";
+
+        private static readonly Regex CommentRegex = new(@"/\*.*?\*/", RegexOptions.Compiled | RegexOptions.Singleline);
+        private static readonly Regex ClassTokenRegex = new(@"\.([\w-]+)", RegexOptions.Compiled);
 
         public static VisualElement CreateBrowseField(string title, string initialValue, string titleTooltip,
             string browseTooltip, Action<string> onFolderSelected)
@@ -130,6 +135,33 @@ namespace LeosTools.Editor
             row.Add(textField);
 
             return row;
+        }
+
+        internal static IEnumerable<string> ExtractClassNames(string ussContent)
+        {
+            var withoutComments = CommentRegex.Replace(ussContent, string.Empty);
+            var classNames = new List<string>();
+
+            foreach (var ruleBlock in withoutComments.Split('{'))
+            {
+                var selectorText = ruleBlock;
+                var lastBrace = selectorText.LastIndexOf('}');
+
+                if (lastBrace >= 0)
+                {
+                    selectorText = selectorText[(lastBrace + 1)..];
+                }
+
+                foreach (var selector in selectorText.Split(','))
+                {
+                    foreach (Match match in ClassTokenRegex.Matches(selector))
+                    {
+                        classNames.Add(match.Groups[1].Value);
+                    }
+                }
+            }
+
+            return classNames.Distinct();
         }
 
         public static string? SanitizeName(string name, bool keepHyphens = false, bool capitalizeFirst = false)
