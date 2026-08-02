@@ -11,42 +11,64 @@ namespace SpriteLibrary.Editor
     public class SpriteLibraryWindow : EditorWindow
     {
         private SpriteLibrarySettings _settings;
-        private ScrollView _scrollView;
+        private readonly HashSet<int> _expandedGroups = new();
+        private int _selectedGroup = -1;
+        private string _searchText = string.Empty;
+
+        private ScrollView _treeView;
+        private VisualElement _galleryGrid;
         private TextField _newGroupNameField;
 
         [MenuItem("Tools/Leo's Tools/Sprite Library")]
         public static void Open()
         {
             var window = GetWindow<SpriteLibraryWindow>("Sprite Library");
-            window.minSize = new Vector2(500, 400);
+            window.minSize = new Vector2(600, 400);
         }
 
         private void OnEnable()
         {
             _settings = SpriteLibrarySettings.instance;
             Undo.undoRedoPerformed += OnUndo;
+
             rootVisualElement.Clear();
             rootVisualElement.style.paddingLeft = 10;
             rootVisualElement.style.paddingTop = 10;
-            var groupRow = new VisualElement
+            rootVisualElement.style.flexGrow = 1;
+
+            rootVisualElement.Add(BuildToolbar());
+            rootVisualElement.Add(BuildNewGroupRow());
+
+            var split = new VisualElement
             {
-                style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, marginBottom = 10 }
+                style = { flexDirection = FlexDirection.Row, flexGrow = 1, marginTop = 6 }
             };
-            _newGroupNameField = new TextField { label = "New Group Name", style = { flexGrow = 1 } };
-            var addGroupBtn = new Button(OnAddGroup)
+
+            _treeView = new ScrollView
             {
-                text = "+",
-                tooltip = "Add Group",
-                style = { width = 24, height = 24, unityTextAlign = TextAnchor.MiddleCenter, marginLeft = 5 }
+                style =
+                {
+                    width = 220, marginRight = 8, borderRightWidth = 1,
+                    borderRightColor = new Color(0.4f, 0.4f, 0.4f)
+                }
             };
-            groupRow.Add(_newGroupNameField);
-            groupRow.Add(addGroupBtn);
-            rootVisualElement.Add(groupRow);
-            _scrollView = new ScrollView { style = { flexGrow = 1 } };
-            rootVisualElement.Add(_scrollView);
-            BuildUI();
+            split.Add(_treeView);
+
+            var galleryScroll = new ScrollView { style = { flexGrow = 1 } };
+            _galleryGrid = new VisualElement
+            {
+                style = { flexDirection = FlexDirection.Row, flexWrap = Wrap.Wrap }
+            };
+            galleryScroll.Add(_galleryGrid);
+            split.Add(galleryScroll);
+
+            rootVisualElement.Add(split);
+
             rootVisualElement.Add(Utility.CreateButton("Generate", SpriteLibraryGenerator.Generate,
                 "Generate Sprite Library"));
+
+            RebuildTree();
+            RebuildGallery();
         }
 
         private void OnDisable()
@@ -56,151 +78,355 @@ namespace SpriteLibrary.Editor
 
         private void OnUndo()
         {
-            if (focusedWindow == this && _scrollView != null)
+            if (focusedWindow != this)
             {
-                BuildUI();
+                return;
             }
+
+            RebuildTree();
+            RebuildGallery();
         }
 
-        private void BuildUI()
+        private VisualElement BuildToolbar()
         {
-            _scrollView.Clear();
+            var row = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
+
+            var expandAllBtn = new Button(() =>
+            {
+                _expandedGroups.Clear();
+                for (int i = 0; i < _settings.Groups.Count; i++)
+                {
+                    _expandedGroups.Add(i);
+                }
+
+                RebuildTree();
+            }) { text = "Expand All" };
+            row.Add(expandAllBtn);
+
+            var collapseAllBtn = new Button(() =>
+            {
+                _expandedGroups.Clear();
+                RebuildTree();
+            }) { text = "Collapse All", style = { marginLeft = 4 } };
+            row.Add(collapseAllBtn);
+
+            var searchLabel = new Label("Search") { style = { marginLeft = 10, marginRight = 4 } };
+            row.Add(searchLabel);
+
+            var searchField = new TextField { style = { flexGrow = 1 } };
+            searchField.RegisterValueChangedCallback(evt =>
+            {
+                _searchText = evt.newValue;
+                RebuildGallery();
+            });
+            row.Add(searchField);
+
+            return row;
+        }
+
+        private VisualElement BuildNewGroupRow()
+        {
+            var row = new VisualElement
+            {
+                style =
+                {
+                    flexDirection = FlexDirection.Row, alignItems = Align.Center, marginTop = 8, marginBottom = 4
+                }
+            };
+
+            _newGroupNameField = new TextField { label = "New Group Name", style = { flexGrow = 1 } };
+            var addGroupBtn = new Button(OnAddGroup)
+            {
+                text = "+", tooltip = "Add Group",
+                style = { width = 24, height = 24, unityTextAlign = TextAnchor.MiddleCenter, marginLeft = 5 }
+            };
+
+            row.Add(_newGroupNameField);
+            row.Add(addGroupBtn);
+            return row;
+        }
+
+        private void RebuildTree()
+        {
+            _treeView.Clear();
+
+            var allRow = new Label("All Sprites")
+            {
+                style =
+                {
+                    unityFontStyleAndWeight = _selectedGroup < 0 ? FontStyle.Bold : FontStyle.Normal,
+                    paddingTop = 2, paddingBottom = 2
+                },
+                pickingMode = PickingMode.Position
+            };
+            allRow.RegisterCallback<ClickEvent>(_ =>
+            {
+                _selectedGroup = -1;
+                RebuildTree();
+                RebuildGallery();
+            });
+            _treeView.Add(allRow);
+
             var groups = _settings.Groups;
             for (int i = 0; i < groups.Count; i++)
             {
-                int groupIndex = i;
-                var group = groups[groupIndex];
-                var groupFoldout = new Foldout
+                _treeView.Add(BuildGroupRow(i, groups[i]));
+            }
+        }
+
+        private VisualElement BuildGroupRow(int groupIndex, LibraryGroup group)
+        {
+            bool expanded = _expandedGroups.Contains(groupIndex);
+            bool selected = _selectedGroup == groupIndex;
+
+            var container = new VisualElement();
+
+            var header = new VisualElement
+            {
+                style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, marginTop = 4 }
+            };
+
+            var arrowButton = new Button(() =>
+            {
+                if (!_expandedGroups.Remove(groupIndex))
                 {
-                    text = string.IsNullOrEmpty(group.Name) ? "New Group" : group.Name,
-                    style =
-                    {
-                        marginTop = 10,
-                        borderTopWidth = 1,
-                        borderTopColor = new Color(0.7f, 0.7f, 0.7f),
-                        paddingTop = 4
-                    }
-                };
-                _scrollView.Add(groupFoldout);
-                var deleteGroupBtn = new Button(() => ConfirmDeleteGroup(groupIndex))
+                    _expandedGroups.Add(groupIndex);
+                }
+
+                RebuildTree();
+            })
+            {
+                text = expanded ? "▾" : "▸",
+                style = { width = 20, height = 20, marginRight = 2 }
+            };
+            header.Add(arrowButton);
+
+            var nameLabel = new Label(string.IsNullOrEmpty(group.Name) ? "New Group" : group.Name)
+            {
+                style =
                 {
-                    text = "X",
-                    tooltip = "Delete Group",
-                    style =
-                    {
-                        width = 20, height = 20, unityTextAlign = TextAnchor.MiddleCenter, marginLeft = 5,
-                        alignItems = Align.Center
-                    }
-                };
-                var groupLabel = groupFoldout.Q<Label>();
-                groupLabel?.parent.Add(deleteGroupBtn);
-                var addEntryBtn = new Button(() => InsertEntry(groupIndex, group.Entries.Count))
-                {
-                    text = "+",
-                    tooltip = "Add Entry",
-                    style =
-                    {
-                        width = 20, height = 20, unityTextAlign = TextAnchor.MiddleCenter, marginLeft = 2,
-                        alignItems = Align.Center
-                    }
-                };
-                groupLabel?.parent.Add(addEntryBtn);
+                    flexGrow = 1,
+                    unityFontStyleAndWeight = selected ? FontStyle.Bold : FontStyle.Normal,
+                    backgroundColor = selected ? new Color(0.24f, 0.37f, 0.58f, 0.6f) : Color.clear
+                },
+                pickingMode = PickingMode.Position
+            };
+            nameLabel.RegisterCallback<ClickEvent>(_ =>
+            {
+                _selectedGroup = selected ? -1 : groupIndex;
+                RebuildTree();
+                RebuildGallery();
+            });
+            header.Add(nameLabel);
+
+            var addEntryBtn = new Button(() => InsertEntry(groupIndex, group.Entries.Count))
+            {
+                text = "+", tooltip = "Add Entry",
+                style = { width = 20, height = 20, marginLeft = 2 }
+            };
+            header.Add(addEntryBtn);
+
+            var deleteGroupBtn = new Button(() => ConfirmDeleteGroup(groupIndex))
+            {
+                text = "X", tooltip = "Delete Group",
+                style = { width = 20, height = 20, marginLeft = 2 }
+            };
+            header.Add(deleteGroupBtn);
+
+            container.Add(header);
+
+            if (expanded)
+            {
+                var body = new VisualElement { style = { marginLeft = 22, marginTop = 2 } };
+
                 var nameField = new TextField("Group Name") { value = group.Name };
                 nameField.RegisterValueChangedCallback(evt =>
                 {
-                    group.Name = evt.newValue;
-                    UpdateGroup(groupIndex, group);
-                    groupFoldout.text = string.IsNullOrEmpty(evt.newValue) ? "New Group" : evt.newValue;
+                    var updated = group;
+                    updated.Name = evt.newValue;
+                    UpdateGroup(groupIndex, updated);
                 });
-                groupFoldout.Add(nameField);
-                for (int j = 0; j < group.Entries.Count; j++)
+                body.Add(nameField);
+
+                foreach (var entry in group.Entries)
                 {
-                    int entryIndex = j;
-                    var entry = group.Entries[entryIndex];
-                    var entryFoldout = new Foldout
+                    body.Add(new Label(string.IsNullOrEmpty(entry.Name) ? "(unnamed)" : entry.Name)
                     {
-                        text = string.IsNullOrEmpty(entry.Name) ? $"Entry {entryIndex + 1}" : entry.Name,
-                        style =
-                        {
-                            marginTop = 5,
-                            marginLeft = 20,
-                            borderLeftWidth = 1,
-                            borderLeftColor = new Color(0.7f, 0.7f, 0.7f),
-                            paddingLeft = 4
-                        }
-                    };
-                    groupFoldout.Add(entryFoldout);
-                    var removeButton = new Button(() => OnDeleteEntry(groupIndex, entryIndex))
-                    {
-                        text = "-",
-                        tooltip = "Remove Entry",
-                        style =
-                        {
-                            width = 20, height = 20, unityTextAlign = TextAnchor.MiddleCenter, marginLeft = 5,
-                            alignItems = Align.Center
-                        }
-                    };
-                    var entryLabel = entryFoldout.Q<Label>();
-                    entryLabel?.parent.Add(removeButton);
-                    var entryNameField = new TextField("Name");
-                    entryNameField.RegisterValueChangedCallback(evt =>
-                    {
-                        entry.Name = evt.newValue;
-                        UpdateEntry(groupIndex, entryIndex, entry);
-                        entryFoldout.text = string.IsNullOrEmpty(evt.newValue)
-                            ? $"Entry {entryIndex + 1}"
-                            : evt.newValue;
+                        style = { marginLeft = 4, fontSize = 11, color = new Color(0.75f, 0.75f, 0.75f) }
                     });
-                    entryFoldout.Add(entryNameField);
-                    var typeField = new EnumField("Type", entry.Type);
-                    typeField.Init(entry.Type);
-                    typeField.RegisterValueChangedCallback(evt =>
-                    {
-                        entry.Type = (SpriteStyleType)evt.newValue;
-                        UpdateEntry(groupIndex, entryIndex, entry);
-                    });
-                    entryFoldout.Add(typeField);
-                    var spriteField = new ObjectField("Sprite") { objectType = typeof(Sprite), value = entry.Sprite };
-                    spriteField.RegisterValueChangedCallback(evt =>
-                    {
-                        if (evt.newValue is not Sprite newSprite)
-                        {
-                            return;
-                        }
+                }
 
-                        string assetPath = AssetDatabase.GetAssetPath(newSprite);
-                        if (!string.IsNullOrEmpty(assetPath) && assetPath.Contains("Resources"))
-                        {
-                            Debug.LogWarning("Sprites from Resources folder are not allowed.");
-                            spriteField.SetValueWithoutNotify(entry.Sprite);
-                            return;
-                        }
+                container.Add(body);
+            }
 
-                        entry.Sprite = newSprite;
-                        UpdateEntry(groupIndex, entryIndex, entry);
-                        if (string.IsNullOrEmpty(entryNameField.value))
-                        {
-                            entryNameField.value = entry.Sprite.name;
-                        }
-                    });
-                    entryFoldout.Add(spriteField);
+            return container;
+        }
+
+        private void RebuildGallery()
+        {
+            _galleryGrid.Clear();
+
+            var groups = _settings.Groups;
+            bool hasSearch = !string.IsNullOrEmpty(_searchText);
+
+            for (int groupIndex = 0; groupIndex < groups.Count; groupIndex++)
+            {
+                var group = groups[groupIndex];
+
+                if (!hasSearch && _selectedGroup >= 0 && _selectedGroup != groupIndex)
+                {
+                    continue;
+                }
+
+                var entries = group.Entries;
+                for (int entryIndex = 0; entryIndex < entries.Count; entryIndex++)
+                {
+                    var entry = entries[entryIndex];
+
+                    if (hasSearch && !Utility.MatchesSearch(_searchText, group.Name, entry.Name))
+                    {
+                        continue;
+                    }
+
+                    _galleryGrid.Add(BuildEntryCard(groupIndex, group.Name, entryIndex, entry));
                 }
             }
         }
 
+        private VisualElement BuildEntryCard(int groupIndex, string groupName, int entryIndex, LibraryEntry entry)
+        {
+            var border = new Color(0.4f, 0.4f, 0.4f);
+            var card = new VisualElement
+            {
+                style =
+                {
+                    width = 160, marginRight = 8, marginBottom = 8, paddingTop = 4, paddingBottom = 4,
+                    paddingLeft = 4, paddingRight = 4,
+                    borderTopWidth = 1, borderBottomWidth = 1, borderLeftWidth = 1, borderRightWidth = 1,
+                    borderTopColor = border, borderBottomColor = border, borderLeftColor = border,
+                    borderRightColor = border,
+                    borderTopLeftRadius = 4, borderTopRightRadius = 4, borderBottomLeftRadius = 4,
+                    borderBottomRightRadius = 4
+                }
+            };
+
+            card.Add(new Label(groupName) { style = { fontSize = 10, color = new Color(0.65f, 0.65f, 0.65f) } });
+
+            var thumbnail = new Image
+            {
+                image = entry.Sprite != null
+                    ? EditorGUIUtility.ObjectContent(entry.Sprite, typeof(Sprite)).image
+                    : null,
+                scaleMode = ScaleMode.ScaleToFit,
+                style = { width = 64, height = 64, alignSelf = Align.Center, marginTop = 4, marginBottom = 4 }
+            };
+            card.Add(thumbnail);
+
+            var nameField = new TextField { value = entry.Name };
+            nameField.RegisterValueChangedCallback(evt =>
+            {
+                var updated = entry;
+                updated.Name = evt.newValue;
+                UpdateEntry(groupIndex, entryIndex, updated);
+            });
+            card.Add(nameField);
+
+            var typeField = new EnumField("Type", entry.Type);
+            typeField.Init(entry.Type);
+            typeField.RegisterValueChangedCallback(evt =>
+            {
+                var updated = entry;
+                updated.Type = (SpriteStyleType)evt.newValue;
+                UpdateEntry(groupIndex, entryIndex, updated);
+            });
+            card.Add(typeField);
+
+            var spriteField = new ObjectField { objectType = typeof(Sprite), value = entry.Sprite };
+            spriteField.RegisterValueChangedCallback(evt =>
+            {
+                if (evt.newValue is not Sprite newSprite)
+                {
+                    return;
+                }
+
+                string assetPath = AssetDatabase.GetAssetPath(newSprite);
+                if (!string.IsNullOrEmpty(assetPath) && assetPath.Contains("Resources"))
+                {
+                    Debug.LogWarning("Sprites from Resources folder are not allowed.");
+                    spriteField.SetValueWithoutNotify(entry.Sprite);
+                    return;
+                }
+
+                var updated = entry;
+                updated.Sprite = newSprite;
+
+                if (string.IsNullOrEmpty(updated.Name))
+                {
+                    updated.Name = newSprite.name;
+                    nameField.SetValueWithoutNotify(updated.Name);
+                }
+
+                UpdateEntry(groupIndex, entryIndex, updated);
+            });
+            card.Add(spriteField);
+
+            var removeButton = new Button(() => OnDeleteEntry(groupIndex, entryIndex)) { text = "Remove" };
+            card.Add(removeButton);
+
+            return card;
+        }
+
         private void ConfirmDeleteGroup(int groupIndex)
         {
-            if (!GroupExists(groupIndex)) return;
+            if (!GroupExists(groupIndex))
+            {
+                return;
+            }
+
             var groupName = _settings.Groups[groupIndex].Name;
             if (!EditorUtility.DisplayDialog("Delete Group",
-                $"Are you sure you want to delete the group '{groupName}'?", "Delete", "Cancel")) return;
+                $"Are you sure you want to delete the group '{groupName}'?", "Delete", "Cancel"))
+            {
+                return;
+            }
+
             Undo.RegisterCompleteObjectUndo(_settings, "Delete Group");
             var list = _settings.Groups.ToList();
             list.RemoveAt(groupIndex);
             _settings.Groups = list;
             _settings.SaveDirty();
             EditorUtility.SetDirty(_settings);
-            BuildUI();
+
+            var shiftedExpanded = new HashSet<int>();
+            foreach (var expandedIndex in _expandedGroups)
+            {
+                if (expandedIndex < groupIndex)
+                {
+                    shiftedExpanded.Add(expandedIndex);
+                }
+                else if (expandedIndex > groupIndex)
+                {
+                    shiftedExpanded.Add(expandedIndex - 1);
+                }
+            }
+
+            _expandedGroups.Clear();
+            foreach (var index in shiftedExpanded)
+            {
+                _expandedGroups.Add(index);
+            }
+
+            if (_selectedGroup == groupIndex)
+            {
+                _selectedGroup = -1;
+            }
+            else if (_selectedGroup > groupIndex)
+            {
+                _selectedGroup--;
+            }
+
+            RebuildTree();
+            RebuildGallery();
         }
 
         private void OnAddGroup()
@@ -220,12 +446,18 @@ namespace SpriteLibrary.Editor
             _settings.SaveDirty();
             EditorUtility.SetDirty(_settings);
             _newGroupNameField.value = string.Empty;
-            BuildUI();
+
+            RebuildTree();
+            RebuildGallery();
         }
 
         private void InsertEntry(int groupIndex, int entryIndex)
         {
-            if (!GroupExists(groupIndex)) return;
+            if (!GroupExists(groupIndex))
+            {
+                return;
+            }
+
             Undo.RegisterCompleteObjectUndo(_settings, "Add Entry");
             var groups = _settings.Groups;
             var group = groups[groupIndex];
@@ -237,12 +469,18 @@ namespace SpriteLibrary.Editor
             _settings.Groups = groups;
             _settings.SaveDirty();
             EditorUtility.SetDirty(_settings);
-            BuildUI();
+
+            RebuildTree();
+            RebuildGallery();
         }
 
         private void OnDeleteEntry(int groupIndex, int entryIndex)
         {
-            if (!EntryExists(groupIndex, entryIndex)) return;
+            if (!EntryExists(groupIndex, entryIndex))
+            {
+                return;
+            }
+
             Undo.RegisterCompleteObjectUndo(_settings, "Delete Entry");
             var groups = _settings.Groups;
             var group = groups[groupIndex];
@@ -253,23 +491,35 @@ namespace SpriteLibrary.Editor
             _settings.Groups = groups;
             _settings.SaveDirty();
             EditorUtility.SetDirty(_settings);
-            BuildUI();
+
+            RebuildTree();
+            RebuildGallery();
         }
 
         private void UpdateGroup(int groupIndex, LibraryGroup group)
         {
-            if (!GroupExists(groupIndex)) return;
+            if (!GroupExists(groupIndex))
+            {
+                return;
+            }
+
             Undo.RegisterCompleteObjectUndo(_settings, "Edit Group");
             var groups = _settings.Groups;
             groups[groupIndex] = group;
             _settings.Groups = groups;
             _settings.SaveDirty();
             EditorUtility.SetDirty(_settings);
+
+            RebuildGallery();
         }
 
         private void UpdateEntry(int groupIndex, int entryIndex, LibraryEntry entry)
         {
-            if (!EntryExists(groupIndex, entryIndex)) return;
+            if (!EntryExists(groupIndex, entryIndex))
+            {
+                return;
+            }
+
             Undo.RegisterCompleteObjectUndo(_settings, "Edit Entry");
             var groupsList = _settings.Groups;
             var group = groupsList[groupIndex];
@@ -280,13 +530,19 @@ namespace SpriteLibrary.Editor
             _settings.Groups = groupsList;
             _settings.SaveDirty();
             EditorUtility.SetDirty(_settings);
+
+            RebuildTree();
         }
 
         private bool GroupExists(int groupIndex) => _settings.Groups.Count > groupIndex;
 
         private bool EntryExists(int groupIndex, int entryIndex)
         {
-            if (!GroupExists(groupIndex)) return false;
+            if (!GroupExists(groupIndex))
+            {
+                return false;
+            }
+
             return _settings.Groups[groupIndex].Entries.Count > entryIndex;
         }
     }
