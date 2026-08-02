@@ -1,8 +1,8 @@
 #nullable enable
 using System.CodeDom.Compiler;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using LeosTools.Editor;
 using UnityEditor;
 using UnityEngine.UIElements;
@@ -12,7 +12,6 @@ namespace StyleGenerator.Editor
     public static class StyleClassesGenerator
     {
         private static readonly StyleSettings Settings = StyleSettings.instance;
-        private static readonly Regex StyleRegex = new(@"\.([\w-]+)\s*\{", RegexOptions.Compiled);
         private const string StyleClassesName = "StyleClasses.g.cs";
 
         [MenuItem("Tools/Leo's Tools/Generate Styles")]
@@ -39,36 +38,45 @@ namespace StyleGenerator.Editor
                 .Where(file => file.EndsWith(Utility.UssClassEnding));
 
             builder.WriteLine("//Auto-Generated. Don't modify this file!");
-
             builder.WriteLine();
             builder.WriteLine("using LeosTools.Runtime;");
             builder.WriteLine();
 
+            var seenClassNames = new HashSet<string>();
+
             foreach (var file in files)
             {
-                var className = Utility.SanitizeName(Path.GetFileNameWithoutExtension(file));
+                var rawClassName = Path.GetFileNameWithoutExtension(file);
+                var className = Utility.SanitizeName(rawClassName);
 
-                if (string.IsNullOrEmpty(className))
+                if (!Utility.TryRegisterIdentifier(seenClassNames, className, rawClassName, $"file '{file}'"))
                 {
                     continue;
                 }
 
                 var fileContent = File.ReadAllText(file);
-                var styles = StyleRegex.Matches(fileContent).Select(match => match.Groups[1].Value).Distinct();
+                var styles = Utility.ExtractClassNames(fileContent);
 
                 builder.WriteLine($"public class {prefix}{className}");
                 builder.WriteLine("{");
                 builder.Indent++;
 
+                var seenFieldNames = new HashSet<string>();
+
                 foreach (var style in styles)
                 {
-                    builder.WriteLine(
-                        $"public static StyleEntry {Utility.SanitizeName(style, false, true)} = new(\"{style}\");");
+                    var fieldName = Utility.SanitizeName(style, false, true);
+
+                    if (!Utility.TryRegisterIdentifier(seenFieldNames, fieldName, style, $"class '.{style}' in '{file}'"))
+                    {
+                        continue;
+                    }
+
+                    builder.WriteLine($"public static StyleEntry {fieldName} = new(\"{style}\");");
                 }
 
                 builder.Indent--;
                 builder.WriteLine("}");
-
                 builder.WriteLine();
             }
 
