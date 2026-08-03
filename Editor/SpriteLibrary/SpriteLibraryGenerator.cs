@@ -14,10 +14,39 @@ namespace SpriteLibrary.Editor
         private static readonly SpriteLibrarySettings Settings = SpriteLibrarySettings.instance;
         private const string SpriteClassesName = "SpriteClasses.g.cs";
 
+        private const double DebounceSeconds = 0.75;
+        private static double _pendingSince = -1;
+
         [MenuItem("Tools/Leo's Tools/Generate Sprite Library")]
         public static void Generate()
         {
             Generate(Settings.TargetFolder, Settings.ThemeName, Settings.Prefix);
+        }
+
+        /// <summary>
+        /// Schedules a Generate() call after edits settle, collapsing rapid
+        /// successive edits (e.g. typing) into a single regeneration.
+        /// </summary>
+        public static void RequestRegenerate()
+        {
+            if (_pendingSince < 0)
+            {
+                EditorApplication.update += Tick;
+            }
+
+            _pendingSince = EditorApplication.timeSinceStartup;
+        }
+
+        private static void Tick()
+        {
+            if (EditorApplication.timeSinceStartup - _pendingSince < DebounceSeconds)
+            {
+                return;
+            }
+
+            EditorApplication.update -= Tick;
+            _pendingSince = -1;
+            Generate();
         }
 
         /// <summary>

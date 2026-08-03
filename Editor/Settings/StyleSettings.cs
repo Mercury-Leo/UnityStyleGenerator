@@ -10,6 +10,7 @@ namespace StyleGenerator.Editor
         [SerializeField] private string? targetFolder;
         [SerializeField] private string? sourceFolder;
         [SerializeField] private string? prefix;
+        [SerializeField] private bool autoRegenerate = true;
 
         private const string DefaultTargetFolder = "Assets";
         private const string DefaultSourceFolder = "Assets";
@@ -51,6 +52,21 @@ namespace StyleGenerator.Editor
             set
             {
                 prefix = value;
+                SaveDirty();
+            }
+        }
+
+        public bool AutoRegenerate
+        {
+            get => autoRegenerate;
+            set
+            {
+                if (autoRegenerate == value)
+                {
+                    return;
+                }
+
+                autoRegenerate = value;
                 SaveDirty();
             }
         }

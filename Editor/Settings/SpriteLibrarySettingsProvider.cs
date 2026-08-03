@@ -75,6 +75,16 @@ namespace SpriteLibrary.Editor
 
             rootElement.Add(prefixField);
 
+            var autoRegenerate = new Toggle("Auto Regenerate")
+            {
+                tooltip = "Regenerate the Sprite Library automatically after edits in the Sprite Library window.",
+                value = settings.AutoRegenerate
+            };
+
+            autoRegenerate.RegisterValueChangedCallback(evt => { settings.AutoRegenerate = evt.newValue; });
+
+            rootElement.Add(autoRegenerate);
+
             var libraryButton = Utility.CreateButton("Open Sprite Library",
                 () => ScriptableObject.CreateInstance<SpriteLibraryWindow>().Show());
 

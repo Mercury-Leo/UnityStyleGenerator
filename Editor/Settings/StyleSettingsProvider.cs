@@ -52,6 +52,16 @@ namespace StyleGenerator.Editor
 
             rootElement.Add(prefixField);
 
+            var autoRegenerate = new Toggle("Auto Regenerate")
+            {
+                tooltip = "Regenerate Style Classes automatically when USS/TSS files in the USS Folder change.",
+                value = settings.AutoRegenerate
+            };
+
+            autoRegenerate.RegisterValueChangedCallback(evt => { settings.AutoRegenerate = evt.newValue; });
+
+            rootElement.Add(autoRegenerate);
+
             var generateButton =
                 Utility.CreateButton("Generate", StyleClassesGenerator.Generate, "Generate Style Classes");
 

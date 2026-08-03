@@ -17,6 +17,8 @@ namespace SpriteLibrary.Editor
 
         [SerializeField] public bool GenerateTheme = true;
 
+        [SerializeField] private bool autoRegenerate = true;
+
         private const string DefaultTargetFolder = "Assets";
         private const string DefaultThemeName = "SpriteLibraryTheme";
         private const string DefaultPrefix = "Sprite_";
@@ -56,6 +58,21 @@ namespace SpriteLibrary.Editor
             }
         }
 
+        public bool AutoRegenerate
+        {
+            get => autoRegenerate;
+            set
+            {
+                if (autoRegenerate == value)
+                {
+                    return;
+                }
+
+                autoRegenerate = value;
+                SaveDirty();
+            }
+        }
+
         private void Awake()
         {
             SetDefaultFolder();
@@ -66,6 +83,11 @@ namespace SpriteLibrary.Editor
             Save(this);
             EditorUtility.SetDirty(this);
             AssetDatabase.SaveAssets();
+
+            if (AutoRegenerate)
+            {
+                SpriteLibraryGenerator.RequestRegenerate();
+            }
         }
 
         private void SetDefaultFolder()
