@@ -240,6 +240,13 @@ namespace LeosTools.Editor
         {
             try
             {
+                // Unchanged output is a no-op: writing identical content would reimport the asset
+                // and, for .cs, force a redundant script recompile.
+                if (File.Exists(path) && File.ReadAllText(path, Encoding.UTF8) == content)
+                {
+                    return true;
+                }
+
                 var directory = Path.GetDirectoryName(path);
                 if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
                 {
