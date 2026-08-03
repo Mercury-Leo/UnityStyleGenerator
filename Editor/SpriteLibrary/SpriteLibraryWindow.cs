@@ -548,8 +548,8 @@ namespace SpriteLibrary.Editor
             _settings.SaveDirty();
             EditorUtility.SetDirty(_settings);
 
-            RebuildGallery();
-
+            // No rebuild: the only card content derived from a group is the cosmetic name tag,
+            // which self-corrects on the next structural rebuild.
             if (_settings.AutoRegenerate)
             {
                 SpriteLibraryGenerator.RequestRegenerate();
@@ -574,8 +574,7 @@ namespace SpriteLibrary.Editor
             _settings.SaveDirty();
             EditorUtility.SetDirty(_settings);
 
-            RebuildTree();
-
+            // No rebuild: the tree no longer displays anything derived from entry data.
             if (_settings.AutoRegenerate)
             {
                 SpriteLibraryGenerator.RequestRegenerate();
