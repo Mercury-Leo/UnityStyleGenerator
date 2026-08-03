@@ -315,15 +315,26 @@ namespace SpriteLibrary.Editor
 
             card.Add(new Label(groupName) { style = { fontSize = 10, color = new Color(0.65f, 0.65f, 0.65f) } });
 
+            var sprite = entry.Sprite;
             var thumbnail = new Image
             {
-                image = entry.Sprite != null
-                    ? EditorGUIUtility.ObjectContent(entry.Sprite, typeof(Sprite)).image
-                    : null,
+                image = sprite != null ? AssetPreview.GetAssetPreview(sprite) ?? AssetPreview.GetMiniThumbnail(sprite) : null,
                 scaleMode = ScaleMode.ScaleToFit,
                 style = { width = 64, height = 64, alignSelf = Align.Center, marginTop = 4, marginBottom = 4 }
             };
             card.Add(thumbnail);
+
+            if (sprite != null && AssetPreview.GetAssetPreview(sprite) == null)
+            {
+                thumbnail.schedule.Execute(() =>
+                {
+                    var preview = AssetPreview.GetAssetPreview(sprite);
+                    if (preview != null)
+                    {
+                        thumbnail.image = preview;
+                    }
+                }).Every(100).Until(() => AssetPreview.GetAssetPreview(sprite) != null);
+            }
 
             var nameField = new TextField { value = entry.Name };
             nameField.RegisterValueChangedCallback(evt =>
