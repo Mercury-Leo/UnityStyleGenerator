@@ -259,15 +259,6 @@ namespace SpriteLibrary.Editor
                 });
                 body.Add(nameField);
 
-                for (int entryIndex = 0; entryIndex < group.Entries.Count; entryIndex++)
-                {
-                    var entry = group.Entries[entryIndex];
-                    body.Add(new Label(string.IsNullOrEmpty(entry.Name) ? $"Entry {entryIndex + 1}" : entry.Name)
-                    {
-                        style = { marginLeft = 4, fontSize = 11, color = new Color(0.75f, 0.75f, 0.75f) }
-                    });
-                }
-
                 container.Add(body);
             }
 
