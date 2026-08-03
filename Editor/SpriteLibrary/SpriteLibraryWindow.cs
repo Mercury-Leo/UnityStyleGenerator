@@ -250,12 +250,15 @@ namespace SpriteLibrary.Editor
             {
                 var body = new VisualElement { style = { marginLeft = 22, marginTop = 2 } };
 
+                // Shared across the callbacks below — LibraryGroup is a struct, so cross-field
+                // edits must mutate one shared copy or they revert each other.
+                var current = group;
+
                 var nameField = new TextField("Group Name") { value = group.Name };
                 nameField.RegisterValueChangedCallback(evt =>
                 {
-                    var updated = group;
-                    updated.Name = evt.newValue;
-                    UpdateGroup(groupIndex, updated);
+                    current.Name = evt.newValue;
+                    UpdateGroup(groupIndex, current);
                 });
                 body.Add(nameField);
 
@@ -336,12 +339,15 @@ namespace SpriteLibrary.Editor
                 }).Every(100).Until(() => AssetPreview.GetAssetPreview(sprite) != null);
             }
 
+            // Shared across the three field callbacks below — LibraryEntry is a struct, so cross-field
+            // edits must mutate one shared copy or they revert each other.
+            var current = entry;
+
             var nameField = new TextField { value = entry.Name };
             nameField.RegisterValueChangedCallback(evt =>
             {
-                var updated = entry;
-                updated.Name = evt.newValue;
-                UpdateEntry(groupIndex, entryIndex, updated);
+                current.Name = evt.newValue;
+                UpdateEntry(groupIndex, entryIndex, current);
             });
             card.Add(nameField);
 
@@ -349,9 +355,8 @@ namespace SpriteLibrary.Editor
             typeField.Init(entry.Type);
             typeField.RegisterValueChangedCallback(evt =>
             {
-                var updated = entry;
-                updated.Type = (SpriteStyleType)evt.newValue;
-                UpdateEntry(groupIndex, entryIndex, updated);
+                current.Type = (SpriteStyleType)evt.newValue;
+                UpdateEntry(groupIndex, entryIndex, current);
             });
             card.Add(typeField);
 
@@ -367,20 +372,19 @@ namespace SpriteLibrary.Editor
                 if (!string.IsNullOrEmpty(assetPath) && assetPath.Contains("Resources"))
                 {
                     Debug.LogWarning("Sprites from Resources folder are not allowed.");
-                    spriteField.SetValueWithoutNotify(entry.Sprite);
+                    spriteField.SetValueWithoutNotify(current.Sprite);
                     return;
                 }
 
-                var updated = entry;
-                updated.Sprite = newSprite;
+                current.Sprite = newSprite;
 
-                if (string.IsNullOrEmpty(updated.Name))
+                if (string.IsNullOrEmpty(current.Name))
                 {
-                    updated.Name = newSprite.name;
-                    nameField.SetValueWithoutNotify(updated.Name);
+                    current.Name = newSprite.name;
+                    nameField.SetValueWithoutNotify(current.Name);
                 }
 
-                UpdateEntry(groupIndex, entryIndex, updated);
+                UpdateEntry(groupIndex, entryIndex, current);
             });
             card.Add(spriteField);
 
