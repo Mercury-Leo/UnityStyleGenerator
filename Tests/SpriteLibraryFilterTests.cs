@@ -34,5 +34,17 @@ namespace StyleGenerator.Editor.Tests
         {
             Assert.That(Utility.MatchesSearch("cursor", "Buttons", "Primary"), Is.False);
         }
+
+        [Test]
+        public void MatchesSearch_NullGroupName_DoesNotThrowAndChecksEntryName()
+        {
+            Assert.That(Utility.MatchesSearch("prim", null, "Primary"), Is.True);
+        }
+
+        [Test]
+        public void MatchesSearch_NullEntryName_DoesNotThrowAndChecksGroupName()
+        {
+            Assert.That(Utility.MatchesSearch("butt", "Buttons", null), Is.True);
+        }
     }
 }
