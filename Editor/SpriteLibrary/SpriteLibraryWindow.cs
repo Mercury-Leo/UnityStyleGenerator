@@ -124,6 +124,26 @@ namespace SpriteLibrary.Editor
             return row;
         }
 
+        private static Button BuildIconButton(string iconName, string tooltip, System.Action onClick)
+        {
+            var button = new Button(onClick)
+            {
+                tooltip = tooltip,
+                style =
+                {
+                    width = 20, height = 20, marginLeft = 2,
+                    alignItems = Align.Center, justifyContent = Justify.Center
+                }
+            };
+            button.Add(new Image
+            {
+                image = EditorGUIUtility.IconContent(iconName).image,
+                scaleMode = ScaleMode.ScaleToFit,
+                style = { width = 13, height = 13 }
+            });
+            return button;
+        }
+
         private VisualElement BuildNewGroupRow()
         {
             var row = new VisualElement
@@ -135,11 +155,10 @@ namespace SpriteLibrary.Editor
             };
 
             _newGroupNameField = new TextField { label = "New Group Name", style = { flexGrow = 1 } };
-            var addGroupBtn = new Button(OnAddGroup)
-            {
-                text = "+", tooltip = "Add Group",
-                style = { width = 24, height = 24, unityTextAlign = TextAnchor.MiddleCenter, marginLeft = 5 }
-            };
+            var addGroupBtn = BuildIconButton("Toolbar Plus", "Add Group", OnAddGroup);
+            addGroupBtn.style.width = 24;
+            addGroupBtn.style.height = 24;
+            addGroupBtn.style.marginLeft = 5;
 
             row.Add(_newGroupNameField);
             row.Add(addGroupBtn);
@@ -219,18 +238,10 @@ namespace SpriteLibrary.Editor
             });
             header.Add(nameLabel);
 
-            var addEntryBtn = new Button(() => InsertEntry(groupIndex, group.Entries.Count))
-            {
-                text = "+", tooltip = "Add Entry",
-                style = { width = 20, height = 20, marginLeft = 2 }
-            };
+            var addEntryBtn = BuildIconButton("Toolbar Plus", "Add Entry", () => InsertEntry(groupIndex, group.Entries.Count));
             header.Add(addEntryBtn);
 
-            var deleteGroupBtn = new Button(() => ConfirmDeleteGroup(groupIndex))
-            {
-                text = "X", tooltip = "Delete Group",
-                style = { width = 20, height = 20, marginLeft = 2 }
-            };
+            var deleteGroupBtn = BuildIconButton("Toolbar Minus", "Delete Group", () => ConfirmDeleteGroup(groupIndex));
             header.Add(deleteGroupBtn);
 
             container.Add(header);
@@ -331,7 +342,7 @@ namespace SpriteLibrary.Editor
             });
             card.Add(nameField);
 
-            var typeField = new EnumField("Type", entry.Type);
+            var typeField = new EnumField(entry.Type);
             typeField.Init(entry.Type);
             typeField.RegisterValueChangedCallback(evt =>
             {
