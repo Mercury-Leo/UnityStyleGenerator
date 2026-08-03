@@ -83,11 +83,6 @@ namespace SpriteLibrary.Editor
             Save(this);
             EditorUtility.SetDirty(this);
             AssetDatabase.SaveAssets();
-
-            if (AutoRegenerate)
-            {
-                SpriteLibraryGenerator.RequestRegenerate();
-            }
         }
 
         private void SetDefaultFolder()

@@ -445,6 +445,11 @@ namespace SpriteLibrary.Editor
 
             RebuildTree();
             RebuildGallery();
+
+            if (_settings.AutoRegenerate)
+            {
+                SpriteLibraryGenerator.RequestRegenerate();
+            }
         }
 
         private void OnAddGroup()
@@ -467,6 +472,11 @@ namespace SpriteLibrary.Editor
 
             RebuildTree();
             RebuildGallery();
+
+            if (_settings.AutoRegenerate)
+            {
+                SpriteLibraryGenerator.RequestRegenerate();
+            }
         }
 
         private void InsertEntry(int groupIndex, int entryIndex)
@@ -490,6 +500,11 @@ namespace SpriteLibrary.Editor
 
             RebuildTree();
             RebuildGallery();
+
+            if (_settings.AutoRegenerate)
+            {
+                SpriteLibraryGenerator.RequestRegenerate();
+            }
         }
 
         private void OnDeleteEntry(int groupIndex, int entryIndex)
@@ -512,6 +527,11 @@ namespace SpriteLibrary.Editor
 
             RebuildTree();
             RebuildGallery();
+
+            if (_settings.AutoRegenerate)
+            {
+                SpriteLibraryGenerator.RequestRegenerate();
+            }
         }
 
         private void UpdateGroup(int groupIndex, LibraryGroup group)
@@ -529,6 +549,11 @@ namespace SpriteLibrary.Editor
             EditorUtility.SetDirty(_settings);
 
             RebuildGallery();
+
+            if (_settings.AutoRegenerate)
+            {
+                SpriteLibraryGenerator.RequestRegenerate();
+            }
         }
 
         private void UpdateEntry(int groupIndex, int entryIndex, LibraryEntry entry)
@@ -550,6 +575,11 @@ namespace SpriteLibrary.Editor
             EditorUtility.SetDirty(_settings);
 
             RebuildTree();
+
+            if (_settings.AutoRegenerate)
+            {
+                SpriteLibraryGenerator.RequestRegenerate();
+            }
         }
 
         private bool GroupExists(int groupIndex) => _settings.Groups.Count > groupIndex;
