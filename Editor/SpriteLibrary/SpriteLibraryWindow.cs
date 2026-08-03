@@ -581,7 +581,7 @@ namespace SpriteLibrary.Editor
             }
         }
 
-        private bool GroupExists(int groupIndex) => _settings.Groups.Count > groupIndex;
+        private bool GroupExists(int groupIndex) => (uint)groupIndex < (uint)_settings.Groups.Count;
 
         private bool EntryExists(int groupIndex, int entryIndex)
         {
@@ -590,7 +590,7 @@ namespace SpriteLibrary.Editor
                 return false;
             }
 
-            return _settings.Groups[groupIndex].Entries.Count > entryIndex;
+            return (uint)entryIndex < (uint)_settings.Groups[groupIndex].Entries.Count;
         }
     }
 }
