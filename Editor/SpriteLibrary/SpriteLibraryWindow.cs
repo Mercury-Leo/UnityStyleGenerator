@@ -142,7 +142,7 @@ namespace SpriteLibrary.Editor
                     };
                     var entryLabel = entryFoldout.Q<Label>();
                     entryLabel?.parent.Add(removeButton);
-                    var entryNameField = new TextField("Name");
+                    var entryNameField = new TextField("Name") { value = entry.Name };
                     entryNameField.RegisterValueChangedCallback(evt =>
                     {
                         entry.Name = evt.newValue;
