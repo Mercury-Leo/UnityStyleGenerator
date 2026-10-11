@@ -105,7 +105,7 @@ namespace SpriteLibrary.Editor
                     continue;
                 }
 
-                builder.AppendLine($"\t{VariableForEntry(entry, groupName)}: url(\"{GetProjectDatabaseUrl(entry.Sprite)}\");");
+                builder.AppendLine($"\t{VariableForEntry(entry, groupName)}: url(\"{GetProjectDatabaseUrl(entry.Sprite!)}\");");
             }
             builder.AppendLine("}");
         }

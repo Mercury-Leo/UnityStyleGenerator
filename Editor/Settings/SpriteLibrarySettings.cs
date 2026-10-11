@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UIElements;
+using Object = UnityEngine.Object;
 
 namespace SpriteLibrary.Editor
 {
@@ -94,11 +96,21 @@ namespace SpriteLibrary.Editor
     {
         public string Name;
         public SpriteStyleType Type;
-        public Sprite Sprite;
+
+        /// <summary>
+        /// A <see cref="UnityEngine.Sprite"/> or a <see cref="VectorImage"/>.
+        /// Kept as "Sprite" so existing serialized references load unchanged.
+        /// </summary>
+        public Object? Sprite;
 
         public bool IsValid()
         {
-            return !string.IsNullOrEmpty(Name) && Sprite != null;
+            return !string.IsNullOrEmpty(Name) && IsSupported(Sprite);
+        }
+
+        public static bool IsSupported(Object? asset)
+        {
+            return asset != null && asset is UnityEngine.Sprite or VectorImage;
         }
     }
 

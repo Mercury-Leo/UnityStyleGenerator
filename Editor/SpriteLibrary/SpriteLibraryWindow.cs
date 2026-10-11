@@ -160,15 +160,25 @@ namespace SpriteLibrary.Editor
                         UpdateEntry(groupIndex, entryIndex, entry);
                     });
                     entryFoldout.Add(typeField);
-                    var spriteField = new ObjectField("Sprite") { objectType = typeof(Sprite), value = entry.Sprite };
+                    var spriteField = new ObjectField("Sprite / Vector Image")
+                    {
+                        objectType = typeof(Object), value = entry.Sprite
+                    };
                     spriteField.RegisterValueChangedCallback(evt =>
                     {
-                        if (evt.newValue is not Sprite newSprite)
+                        // A typed Sprite field turned a dropped texture into its sprite; keep doing that.
+                        var newSprite = evt.newValue is Texture2D texture
+                            ? AssetDatabase.LoadAssetAtPath<Sprite>(AssetDatabase.GetAssetPath(texture))
+                            : evt.newValue;
+
+                        if (!LibraryEntry.IsSupported(newSprite))
                         {
+                            spriteField.SetValueWithoutNotify(entry.Sprite);
                             return;
                         }
 
                         string assetPath = AssetDatabase.GetAssetPath(newSprite);
+
                         if (!string.IsNullOrEmpty(assetPath) && assetPath.Contains("Resources"))
                         {
                             Debug.LogWarning("Sprites from Resources folder are not allowed.");
