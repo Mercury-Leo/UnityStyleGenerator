@@ -1,10 +1,12 @@
 #nullable enable
 using System.CodeDom.Compiler;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using LeosTools.Editor;
 using UnityEditor;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace StyleGenerator.Editor
@@ -12,7 +14,12 @@ namespace StyleGenerator.Editor
     public static class StyleClassesGenerator
     {
         private static readonly StyleSettings Settings = StyleSettings.instance;
-        private static readonly Regex StyleRegex = new(@"\.([\w-]+)\s*\{", RegexOptions.Compiled);
+        private static readonly Regex CommentRegex = new(@"/\*.*?\*/", RegexOptions.Compiled | RegexOptions.Singleline);
+
+        // A selector prelude: the text after a '}' or ';' (or the file start) up to the next '{'.
+        // ';' keeps @import url("x.uss"); out of the next rule's prelude.
+        private static readonly Regex PreludeRegex = new(@"([^{};]*)\{", RegexOptions.Compiled);
+        private static readonly Regex ClassRegex = new(@"\.(-?[_a-zA-Z][\w-]*)", RegexOptions.Compiled);
         private const string StyleClassesName = "StyleClasses.g.cs";
 
         [MenuItem("Tools/Leo's Tools/Generate Styles")]
@@ -53,17 +60,23 @@ namespace StyleGenerator.Editor
                     continue;
                 }
 
-                var fileContent = File.ReadAllText(file);
-                var styles = StyleRegex.Matches(fileContent).Select(match => match.Groups[1].Value).Distinct();
-
                 builder.WriteLine($"public class {prefix}{className}");
                 builder.WriteLine("{");
                 builder.Indent++;
 
-                foreach (var style in styles)
+                var names = new HashSet<string>();
+
+                foreach (var style in GetClasses(File.ReadAllText(file)))
                 {
-                    builder.WriteLine(
-                        $"public static StyleEntry {Utility.SanitizeName(style, false, true)} = new(\"{style}\");");
+                    var name = Utility.SanitizeName(style, false, true)!;
+
+                    if (!names.Add(name))
+                    {
+                        Debug.LogWarning($"{file}: '.{style}' maps to the existing member {name}, skipped.");
+                        continue;
+                    }
+
+                    builder.WriteLine($"public static StyleEntry {name} = new(\"{style}\");");
                 }
 
                 builder.Indent--;
@@ -73,6 +86,18 @@ namespace StyleGenerator.Editor
             }
 
             Utility.TryCreateFile(outputPath, writer.ToString());
+        }
+
+        /// <summary>
+        /// Every class used in a selector of the given USS, distinct, in first-appearance order.
+        /// Comments and declaration blocks are never read.
+        /// </summary>
+        public static IEnumerable<string> GetClasses(string uss)
+        {
+            return PreludeRegex.Matches(CommentRegex.Replace(uss, " "))
+                .SelectMany(prelude => ClassRegex.Matches(prelude.Groups[1].Value))
+                .Select(match => match.Groups[1].Value)
+                .Distinct();
         }
     }
 }
